@@ -1,0 +1,816 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Elixir 2023-01
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    # {:exla, "~> 0.6.0"},
+    # {:explorer, "~> 0.7"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"},
+    # {:kino_vega_lite, "~> 0.1.11"},
+    {:nimble_parsec, "~> 1.4"}
+    # {:nx, "~> 0.6.0"}
+  ]
+  # config: [
+  #   nx: [
+  #     default_backend: EXLA.Backend,
+  #     default_defn_options: [compiler: EXLA]
+  #   ],
+  #   exla: [
+  #     default_client: :cuda,
+  #     clients: [
+  #       host: [platform: :host],
+  #       cuda: [platform: :cuda]
+  #     ]
+  #   ]
+  # ],
+  # system_env: [
+  #   XLA_TARGET: "cuda120"
+  # ]
+)
+
+# Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"1","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "1", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...}
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+  Extracts first and last digits.
+
+      iex> PartOne.parse("1abc2")
+      [12]
+
+      iex> PartOne.parse("pqr3stu8vwx\na1b2c3d4e5f")
+      [38, 15]
+  """
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      digits =
+        line
+        |> String.to_charlist()
+        |> Enum.filter(&(&1 in ?0..?9))
+
+      [0, -1]
+      |> Enum.map(&Enum.at(digits, &1))
+      |> Enum.map(&ascii_to_digit/1)
+      |> Integer.undigits()
+    end)
+  end
+
+  def process(input), do: Enum.sum(input)
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+
+  defp ascii_to_digit(n), do: n - ?0
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 11, ...>>, {:ascii_to_digit, 1}}
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+defmodule PartTwo do
+  @words Enum.with_index(~w(one two three four five six seven eight nine), 1)
+
+  @doc ~S"""
+  Word forms for 1-9 (not 0) may be interleaved with actual numerical digits.
+
+      iex> PartTwo.parse("two1nine")
+      [29]
+
+      iex> PartTwo.parse("eightwothree\nxtwone3four")
+      [83, 24]
+
+  Words may overlap by exactly one character, if the second word starts with 
+  the same letter as the final letter of the previous. This may repeat
+  more-or-less indefinitely, such as EighTwOne for 8-2-1.
+
+      iex> PartTwo.parse("eightwone\noneighthree")
+      [81, 13]
+  """
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(&do_parse(&1, []))
+  end
+
+  defp do_parse("", digits) do
+    [-1, 0]
+    |> Enum.map(&Enum.at(digits, &1))
+    |> Integer.undigits()
+  end
+
+  defp do_parse(input, digits) do
+    case extract_digit(input) do
+      {nil, rest} ->
+        do_parse(rest, digits)
+
+      {n, rest} when is_integer(n) ->
+        do_parse(rest, [n | digits])
+    end
+  end
+
+  # defp parsec(input) do
+  #   for line <- String.split(input, "\n", trim: true) do
+  #     {:ok, digits, "" = _remaining, _, _, _} = DigitOrWord.digits(line)
+  #     digits = List.flatten(digits)
+
+  #     [0, -1]
+  #     |> Enum.map(&Enum.at(digits, &1))
+  #     |> Integer.undigits()
+  #   end
+  # end
+
+  def extract_digit(""), do: {nil, ""}
+
+  for n <- 1..9 do
+    def extract_digit(<<unquote(Integer.to_string(n)), rest::binary>>), do: {unquote(n), rest}
+  end
+
+  for {word, n} <- @words do
+    def extract_digit(<<unquote(word), rest::binary>>),
+      do: {unquote(n), unquote(String.last(word)) <> rest}
+  end
+
+  def extract_digit(<<_hd::binary-size(1), rest::binary>>), do: {nil, rest}
+
+  # defp extract_digit_no_tail()
+
+  def process(input), do: Enum.sum(input)
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 18, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+56465
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+55902
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    1abc2
+    pqr3stu8vwx
+    a1b2c3d4e5f
+    treb7uchet
+    """
+    test "sums calibration values" do
+      assert PartOne.parse(@test_input) == [12, 38, 15, 77]
+      assert PartOne.solve(@test_input) == 142
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    two1nine
+    eightwothree
+    abcone2threexyz
+    xtwone3four
+    4nineeightseven2
+    zoneight234
+    7pqrstsixteen
+    """
+    test "sums calibration values" do
+      assert PartTwo.parse(@test_input) == [29, 83, 13, 24, 42, 14, 76]
+      assert PartTwo.solve(@test_input) == 281
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+......
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+4 doctests, 2 tests, 0 failures
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 6, skipped: 0, failures: 0, excluded: 0}
+```
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    1abc2
+    pqr3stu8vwx
+    a1b2c3d4e5f
+    treb7uchet
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Operating System: Linux
+CPU Information: AMD Ryzen 9 5950X 16-Core Processor
+Number of Available Cores: 32
+Available memory: 62.71 GB
+Elixir 1.15.7
+Erlang 26.1.2
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 3 s
+memory time: 3 s
+reduction time: 3 s
+parallel: 1
+inputs: input, test_input
+Estimated total run time: 44 s
+
+Benchmarking PartOne with input input ...
+Benchmarking PartOne with input test_input ...
+Benchmarking PartTwo with input input ...
+Benchmarking PartTwo with input test_input ...
+
+##### With input input #####
+Name              ips        average  deviation         median         99th %
+PartOne        2.53 K      395.57 μs    ±13.43%      378.58 μs      628.22 μs
+PartTwo        1.24 K      805.26 μs     ±6.12%      798.76 μs      922.29 μs
+
+Comparison: 
+PartOne        2.53 K
+PartTwo        1.24 K - 2.04x slower +409.69 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         0.56 MB
+PartTwo         1.83 MB - 3.29x memory usage +1.28 MB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne        133.76 K
+PartTwo        100.49 K - 0.75x reduction count -33.27000 K
+
+**All measurements for reduction count were the same**
+
+##### With input test_input #####
+Name              ips        average  deviation         median         99th %
+PartOne      731.77 K        1.37 μs  ±1393.55%        1.23 μs        1.78 μs
+PartTwo      554.51 K        1.80 μs  ±1003.09%        1.64 μs        2.30 μs
+
+Comparison: 
+PartOne      731.77 K
+PartTwo      554.51 K - 1.32x slower +0.44 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         1.63 KB
+PartTwo         4.27 KB - 2.62x memory usage +2.64 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne             404
+PartTwo             319 - 0.79x reduction count -85
+
+**All measurements for reduction count were the same**
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %{
+    erlang: "26.1.2",
+    os: :Linux,
+    elixir: "1.15.7",
+    available_memory: "62.71 GB",
+    cpu_speed: "AMD Ryzen 9 5950X 16-Core Processor",
+    num_cores: 32
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 3000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 3000000000.0,
+    reduction_time: 3000000000.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: [
+      {"input",
+       "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...},
+      {"test_input", "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n"}
+    ],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "input",
+      input: "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 395566.7273567468,
+          ips: 2528.0184880113475,
+          std_dev: 53130.570208745645,
+          std_dev_ratio: 0.1343150637662939,
+          std_dev_ips: 339.55096441961405,
+          median: 378585.0,
+          percentiles: %{50 => 378585.0, 99 => 628215.5},
+          mode: [369125, 390265, 373605],
+          minimum: 355934,
+          maximum: 718899,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 7574
+        },
+        samples: [402775, 384325, 393005, 372504, 381635, 377305, 393945, 370535, 369375, 377814,
+         390025, 373645, 380175, 375055, 395085, 373665, 379454, 382095, 391755, 372635, 376215,
+         375205, 397375, 373764, 373324, 377825, 389195, 381545, 369475, 371804, 386175, 369435,
+         375135, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 585056.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 585056.0,
+          percentiles: %{50 => 585056.0, 99 => 585056.0},
+          mode: 585056,
+          minimum: 585056,
+          maximum: 585056,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 6595
+        },
+        samples: [585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
+         585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
+         585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
+         ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 133759.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 133759.0,
+          percentiles: %{50 => 133759.0, 99 => 133759.0},
+          mode: 133759,
+          minimum: 133759,
+          maximum: 133759,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 7670
+        },
+        samples: [133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759,
+         133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759,
+         133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "input",
+      input: "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 805258.9110932044,
+          ips: 1241.8366145646482,
+          std_dev: 49272.48885471578,
+          std_dev_ratio: 0.06118838075051461,
+          std_dev_ips: 75.98597160191176,
+          median: 798761.0,
+          percentiles: %{50 => 798761.0, 99 => 922288.44},
+          mode: 769040,
+          minimum: 735200,
+          maximum: 1959215,
+          relative_more: 2.035709414879507,
+          relative_less: 0.49122924553511965,
+          absolute_difference: 409692.1837364576,
+          sample_size: 3723
+        },
+        samples: [954462, 944122, 793090, 771610, 770260, 763610, 776030, 771110, 893461, 807200,
+         801000, 808881, 827660, 808971, 806540, 797230, 824940, 811640, 802750, 805470, 826591,
+         803850, 810301, 806960, 825780, 801750, 799341, 806810, 823431, 802270, 803090, 806880,
+         ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1923224.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1923224.0,
+          percentiles: %{50 => 1923224.0, 99 => 1923224.0},
+          mode: 1923224,
+          minimum: 1923224,
+          maximum: 1923224,
+          relative_more: 3.287247716457912,
+          relative_less: 0.30420585433626035,
+          absolute_difference: 1338168.0,
+          sample_size: 1836
+        },
+        samples: [1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
+         1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
+         1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
+         1923224, 1923224, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 100489.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 100489.0,
+          percentiles: %{50 => 100489.0, 99 => 100489.0},
+          mode: 100489,
+          minimum: 100489,
+          maximum: 100489,
+          relative_more: 0.7512690734829058,
+          relative_less: 1.331081013842311,
+          absolute_difference: -33270.0,
+          sample_size: 3160
+        },
+        samples: [100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489,
+         100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489,
+         100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1366.5467348081904,
+          ips: 731771.533697573,
+          std_dev: 19043.50301133216,
+          std_dev_ratio: 13.935493405576883,
+          std_dev_ips: 10197597.38223141,
+          median: 1230.0,
+          percentiles: %{50 => 1230.0, 99 => 1780.0},
+          mode: 1230,
+          minimum: 1180,
+          maximum: 14135631,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1872769
+        },
+        samples: [5570, 6250, 1360, 1250, 2510, 1340, 1330, 1240, 1220, 6000, 3070, 1340, 1220,
+         1220, 1210, 1210, 1230, 1220, 1460, 1240, 2290, 1240, 1210, 1210, 1190, 1200, 1190, 1450,
+         1250, 1240, 2170, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1672.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1672.0,
+          percentiles: %{50 => 1672.0, 99 => 1672.0},
+          mode: 1672,
+          minimum: 1672,
+          maximum: 1672,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 198141
+        },
+        samples: [1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672,
+         1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672,
+         1672, 1672, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 404.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 404.0,
+          percentiles: %{50 => 404.0, 99 => 404.0},
+          mode: 404,
+          minimum: 404,
+          maximum: 404,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 36465
+        },
+        samples: [404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404,
+         404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "test_input",
+      input: "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1803.4093842355826,
+          ips: 554505.265826746,
+          std_dev: 18089.736979076424,
+          std_dev_ratio: 10.03085441231869,
+          std_dev_ips: 5562161.592372163,
+          median: 1640.0,
+          percentiles: %{50 => 1640.0, 99 => 2300.0},
+          mode: 1630,
+          minimum: 1540,
+          maximum: 11919391,
+          relative_more: 1.3196836509866678,
+          relative_less: 0.7577573604494874,
+          absolute_difference: 436.86264942739217,
+          sample_size: 1471212
+        },
+        samples: [13540, 3430, 2640, 2280, 2300, 3050, 2740, 1630, 2160, 2190, 1660, 7110, 2230,
+         1650, 2170, 1700, 6200, 1730, 2670, 1670, 1670, 2240, 1660, 2020, 2890, 1640, 1670, 1620,
+         2330, 1700, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 4376.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 4376.0,
+          percentiles: %{50 => 4376.0, 99 => 4376.0},
+          mode: 4376,
+          minimum: 4376,
+          maximum: 4376,
+          relative_more: 2.617224880382775,
+          relative_less: 0.3820840950639854,
+          absolute_difference: 2704.0,
+          sample_size: 147189
+        },
+        samples: [4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376,
+         4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376,
+         4376, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 319.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 319.0,
+          percentiles: %{50 => 319.0, 99 => 319.0},
+          mode: 319,
+          minimum: 319,
+          maximum: 319,
+          relative_more: 0.7896039603960396,
+          relative_less: 1.2664576802507836,
+          absolute_difference: -85.0,
+          sample_size: 36811
+        },
+        samples: [319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319,
+         319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, ...]
+      }
+    }
+  ]
+}
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+```elixir
+defmodule DigitOrWord do
+  import NimbleParsec
+
+  @words Enum.with_index(~w(one two three four five six seven eight nine), 1)
+
+  real_digit = integer(1)
+
+  words =
+    @words
+    |> Enum.map(fn {word, n} ->
+      string(word) |> replace(n)
+    end)
+    |> choice()
+
+  overlapped_words =
+    for {left, lidx} <- @words,
+        {right, ridx} <- @words,
+        {last, tail} = String.split_at(right, 1),
+        String.last(left) == last do
+      string(left <> tail) |> replace([lidx, ridx])
+    end
+    |> choice()
+
+  anything = ascii_char([?a..?z]) |> ignore()
+
+  defparsec(
+    :digits,
+    [real_digit, overlapped_words, words, anything] |> choice() |> repeat() |> eos()
+  )
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, DigitOrWord, <<70, 79, 82, 49, 0, 0, 26, ...>>,
+ [digits__0: 6, digits__2: 6, digits__4: 6, digits__4: 6, digits__5: 6, digits__6: 6, ...]}
+```
+
+```elixir
+[
+  "abc123",
+  "123four",
+  "eightwo",
+  "eightwone"
+]
+|> Enum.map(fn s ->
+  {:ok, parsed, "" = _rem, _context, _line, _col} = DigitOrWord.digits(s)
+  parsed
+end)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[[1, 2, 3], [1, 2, 3, 4], [[8, 2]], [[8, 2]]]
+```
+
+This properly handled "eightwo" as 82 but not "eightwone" as 821.
+
+Since the graph of overlapping words is cyclic, I didn't want to take the time to figure out how to use `NimbleParsec.repeat_while/4` to do some mutual recursion.
+
+```elixir
+words = Enum.with_index(~w(one two three four five six seven eight nine), 1)
+
+graph = :digraph.new()
+
+for {left, _lidx} <- words,
+    {right, _ridx} <- words,
+    {last, _tail} = String.split_at(right, 1),
+    String.last(left) == last do
+  :digraph.add_vertex(graph, left)
+  :digraph.add_vertex(graph, right)
+  :digraph.add_edge(graph, left, right)
+  {left, right}
+end
+
+cyclic = !:digraph_utils.is_acyclic(graph)
+
+:digraph.delete(graph)
+cyclic
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+true
+```
+
+<!-- livebook:{"offset":38707,"stamp":{"token":"XCP.turwn3ZSR0bExHP4WUwiRIHZsJIlxTjLJCHRRFEwpsXntSru9FLEk31HBkoh3Frw4bnX2ZzrpwBc08xsyVKyVX_UGX-HmjVQhDKc_8nvMzKc0wMruck","version":2}} -->
