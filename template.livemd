@@ -1,0 +1,166 @@
+# Advent of Code Template
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    # {:exla, "~> 0.6.0"},
+    # {:explorer, "~> 0.7"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"}
+    # {:kino_vega_lite, "~> 0.1.11"},
+    # {:nimble_parsec, "~> 1.4"},
+    # {:nx, "~> 0.6.0"}
+  ]
+  # config: [
+  #   nx: [
+  #     default_backend: EXLA.Backend,
+  #     default_defn_options: [compiler: EXLA]
+  #   ],
+  #   exla: [
+  #     default_client: :cuda,
+  #     clients: [
+  #       host: [platform: :host],
+  #       cuda: [platform: :cuda]
+  #     ]
+  #   ]
+  # ],
+  # system_env: [
+  #   XLA_TARGET: "cuda120"
+  # ]
+)
+
+# Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"1","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "1", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> PartOne.parse("")
+      ""
+  """
+  def parse(_input) do
+    ""
+  end
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartOne.solve(@test_input) == true
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":2545,"stamp":{"token":"XCP.71kDlk0iiJs4Sh5H1cBNuQMtQZqhiOgK7kQup1qQ7uaizHIHtDJ3x1lxA0mt4f5hcmuPpkJeHxAiHB41c0t2lNIiHN2pv-4WwHOKsT0yx1T3qys5uY0","version":2}} -->
