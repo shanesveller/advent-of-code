@@ -258,20 +258,137 @@ end
 ExUnit.run()
 ```
 
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+```elixir
+defmodule PartOneInline do
+  def solve(input), do: do_solve(input, {0, 0, 0})
+
+  # defp do_solve("", {sum, []}), do: sum
+
+  defp do_solve("", {sum, first_digit, last_digit}) do
+    sum + last_digit + first_digit * 10
+  end
+
+  defp do_solve(<<"\n", rest::binary>>, {sum, first_digit, last_digit}) do
+    do_solve(rest, {sum + last_digit + first_digit * 10, 0, 0})
+  end
+
+  for n <- 1..9 do
+    defp do_solve(<<unquote(Integer.to_string(n)), rest::binary>>, {sum, 0, _last_digit}) do
+      do_solve(rest, {sum, unquote(n), unquote(n)})
+    end
+
+    defp do_solve(
+           <<unquote(Integer.to_string(n)), rest::binary>>,
+           {sum, first_digit, _last_digit}
+         ) do
+      do_solve(rest, {sum, first_digit, unquote(n)})
+    end
+  end
+
+  defp do_solve(<<_ch::binary-size(1), rest::binary>>, {_sum, _first_digit, _last_digit} = state) do
+    do_solve(rest, state)
+  end
+end
+```
+
 <!-- livebook:{"output":true} -->
 
 ```
-......
-Finished in 0.00 seconds (0.00s async, 0.00s sync)
-4 doctests, 2 tests, 0 failures
+{:module, PartOneInline, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:do_solve, 2}}
+```
 
-Randomized with seed 12345
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartOneInline.solve(input)
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-%{total: 6, skipped: 0, failures: 0, excluded: 0}
+56465
+```
+
+```elixir
+defmodule PartTwoInline do
+  def solve(input), do: do_solve(input, {0, 0, 0}, true)
+
+  # defp do_solve("", {sum, []}), do: sum
+
+  defp do_solve("", {sum, first_digit, last_digit}, _prepend) do
+    sum + last_digit + first_digit * 10
+  end
+
+  defp do_solve(<<"\n", rest::binary>>, {sum, first_digit, last_digit}, _prepend) do
+    do_solve(rest, {sum + last_digit + first_digit * 10, 0, 0}, true)
+  end
+
+  for {word, n} <- Enum.with_index(~w(one two three four five six seven eight nine), 1) do
+    defp do_solve(<<unquote(word), rest::binary>>, {sum, 0, _last_digit}, true) do
+      do_solve(unquote(String.last(word)) <> rest, {sum, unquote(n), unquote(n)}, false)
+    end
+
+    defp do_solve(<<unquote(word), rest::binary>>, {sum, 0, _last_digit}, false) do
+      do_solve(rest, {sum, unquote(n), unquote(n)}, true)
+    end
+
+    defp do_solve(<<unquote(word), rest::binary>>, {sum, first_digit, _last_digit}, true) do
+      do_solve(unquote(String.last(word)) <> rest, {sum, first_digit, unquote(n)}, false)
+    end
+
+    defp do_solve(<<unquote(word), rest::binary>>, {sum, first_digit, _last_digit}, false) do
+      do_solve(rest, {sum, first_digit, unquote(n)}, true)
+    end
+  end
+
+  for n <- 1..9 do
+    defp do_solve(
+           <<unquote(Integer.to_string(n)), rest::binary>>,
+           {sum, 0, _last_digit},
+           _prepend
+         ) do
+      do_solve(rest, {sum, unquote(n), unquote(n)}, true)
+    end
+
+    defp do_solve(
+           <<unquote(Integer.to_string(n)), rest::binary>>,
+           {sum, first_digit, _last_digit},
+           _prepend
+         ) do
+      do_solve(rest, {sum, first_digit, unquote(n)}, true)
+    end
+  end
+
+  defp do_solve(
+         <<_ch::binary-size(1), rest::binary>>,
+         {_sum, _first_digit, _last_digit} = state,
+         _prepend
+       ) do
+    do_solve(rest, state, true)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwoInline, <<70, 79, 82, 49, 0, 0, 22, ...>>, {:do_solve, 3}}
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartTwoInline.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+55902
 ```
 
 ## Benchmarks
@@ -280,7 +397,9 @@ Randomized with seed 12345
 Benchee.run(
   %{
     "PartOne" => &PartOne.solve/1,
-    "PartTwo" => &PartTwo.solve/1
+    "PartTwo" => &PartTwo.solve/1,
+    "PartOneInline" => &PartOneInline.solve/1,
+    "PartTwoInline" => &PartTwoInline.solve/1
   },
   inputs: %{
     input: input,
@@ -315,60 +434,80 @@ memory time: 3 s
 reduction time: 3 s
 parallel: 1
 inputs: input, test_input
-Estimated total run time: 44 s
+Estimated total run time: 1.47 min
 
 Benchmarking PartOne with input input ...
 Benchmarking PartOne with input test_input ...
+Benchmarking PartOneInline with input input ...
+Benchmarking PartOneInline with input test_input ...
 Benchmarking PartTwo with input input ...
 Benchmarking PartTwo with input test_input ...
+Benchmarking PartTwoInline with input input ...
+Benchmarking PartTwoInline with input test_input ...
 
 ##### With input input #####
-Name              ips        average  deviation         median         99th %
-PartOne        2.53 K      395.57 μs    ±13.43%      378.58 μs      628.22 μs
-PartTwo        1.24 K      805.26 μs     ±6.12%      798.76 μs      922.29 μs
+Name                    ips        average  deviation         median         99th %
+PartOneInline        9.12 K      109.61 μs     ±2.53%      109.02 μs      114.35 μs
+PartOne              2.63 K      380.89 μs    ±13.95%      364.74 μs      604.03 μs
+PartTwo              1.24 K      806.89 μs    ±17.68%      772.74 μs     1003.12 μs
+PartTwoInline        1.17 K      855.27 μs     ±1.68%      854.98 μs      869.16 μs
 
 Comparison: 
-PartOne        2.53 K
-PartTwo        1.24 K - 2.04x slower +409.69 μs
+PartOneInline        9.12 K
+PartOne              2.63 K - 3.47x slower +271.28 μs
+PartTwo              1.24 K - 7.36x slower +697.28 μs
+PartTwoInline        1.17 K - 7.80x slower +745.66 μs
 
 Memory usage statistics:
 
-Name       Memory usage
-PartOne         0.56 MB
-PartTwo         1.83 MB - 3.29x memory usage +1.28 MB
+Name             Memory usage
+PartOneInline        98.85 KB
+PartOne             571.34 KB - 5.78x memory usage +472.49 KB
+PartTwo            1878.15 KB - 19.00x memory usage +1779.30 KB
+PartTwoInline       410.84 KB - 4.16x memory usage +311.98 KB
 
 **All measurements for memory usage were the same**
 
 Reduction count statistics:
 
-Name    Reduction count
-PartOne        133.76 K
-PartTwo        100.49 K - 0.75x reduction count -33.27000 K
+Name          Reduction count
+PartOneInline         21.84 K
+PartOne              133.76 K - 6.12x reduction count +111.92 K
+PartTwo              100.49 K - 4.60x reduction count +78.65 K
+PartTwoInline         38.04 K - 1.74x reduction count +16.20 K
 
 **All measurements for reduction count were the same**
 
 ##### With input test_input #####
-Name              ips        average  deviation         median         99th %
-PartOne      731.77 K        1.37 μs  ±1393.55%        1.23 μs        1.78 μs
-PartTwo      554.51 K        1.80 μs  ±1003.09%        1.64 μs        2.30 μs
+Name                    ips        average  deviation         median         99th %
+PartTwoInline        3.27 M        0.31 μs  ±8178.57%        0.26 μs        0.42 μs
+PartOneInline        3.09 M        0.32 μs  ±7677.98%        0.28 μs        0.44 μs
+PartTwo              0.54 M        1.85 μs   ±905.32%        1.67 μs        2.97 μs
+PartOne              0.50 M        2.01 μs   ±552.90%        2.02 μs        2.54 μs
 
 Comparison: 
-PartOne      731.77 K
-PartTwo      554.51 K - 1.32x slower +0.44 μs
+PartTwoInline        3.27 M
+PartOneInline        3.09 M - 1.06x slower +0.0179 μs
+PartTwo              0.54 M - 6.04x slower +1.54 μs
+PartOne              0.50 M - 6.56x slower +1.70 μs
 
 Memory usage statistics:
 
-Name       Memory usage
-PartOne         1.63 KB
-PartTwo         4.27 KB - 2.62x memory usage +2.64 KB
+Name             Memory usage
+PartTwoInline         0.48 KB
+PartOneInline         0.48 KB - 1.00x memory usage +0 KB
+PartTwo               4.27 KB - 8.97x memory usage +3.80 KB
+PartOne               1.63 KB - 3.43x memory usage +1.16 KB
 
 **All measurements for memory usage were the same**
 
 Reduction count statistics:
 
-Name    Reduction count
-PartOne             404
-PartTwo             319 - 0.79x reduction count -85
+Name          Reduction count
+PartTwoInline              43
+PartOneInline              43 - 1.00x reduction count +0
+PartTwo                   319 - 7.42x reduction count +276
+PartOne                   404 - 9.40x reduction count +361
 
 **All measurements for reduction count were the same**
 ```
@@ -414,6 +553,83 @@ PartTwo             319 - 0.79x reduction count -85
   },
   scenarios: [
     %Benchee.Scenario{
+      name: "PartOneInline",
+      job_name: "PartOneInline",
+      function: &PartOneInline.solve/1,
+      input_name: "input",
+      input: "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 109608.7459625737,
+          ips: 9123.359556923073,
+          std_dev: 2769.427529342853,
+          std_dev_ratio: 0.025266483117035974,
+          std_dev_ips: 230.51521021564562,
+          median: 109021.0,
+          percentiles: %{50 => 109021.0, 99 => 114351.0},
+          mode: 108721,
+          minimum: 108011,
+          maximum: 342685,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 27307
+        },
+        samples: [118562, 114021, 114182, 113651, 113431, 113492, 113841, 117612, 113831, 113712,
+         113881, 113591, 113632, 113621, 113542, 113841, 116622, 114211, 113881, 113762, 113461,
+         113542, 113611, 134442, 116821, 113472, 113781, 113481, 113782, 113491, 113442, 113371,
+         113742, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 101224.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 101224.0,
+          percentiles: %{50 => 101224.0, 99 => 101224.0},
+          mode: 101224,
+          minimum: 101224,
+          maximum: 101224,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 9915
+        },
+        samples: [101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224,
+         101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224,
+         101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224, 101224,
+         ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 21840.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 21840.0,
+          percentiles: %{50 => 21840.0, 99 => 21840.0},
+          mode: 21840,
+          minimum: 21840,
+          maximum: 21840,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 19308
+        },
+        samples: [21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840,
+         21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840, 21840,
+         21840, 21840, 21840, 21840, 21840, 21840, 21840, ...]
+      }
+    },
+    %Benchee.Scenario{
       name: "PartOne",
       job_name: "PartOne",
       function: &PartOne.solve/1,
@@ -426,25 +642,25 @@ PartTwo             319 - 0.79x reduction count -85
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 395566.7273567468,
-          ips: 2528.0184880113475,
-          std_dev: 53130.570208745645,
-          std_dev_ratio: 0.1343150637662939,
-          std_dev_ips: 339.55096441961405,
-          median: 378585.0,
-          percentiles: %{50 => 378585.0, 99 => 628215.5},
-          mode: [369125, 390265, 373605],
-          minimum: 355934,
-          maximum: 718899,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 7574
+          average: 380890.2179992373,
+          ips: 2625.428411506232,
+          std_dev: 53145.39535364361,
+          std_dev_ratio: 0.13952943090218722,
+          std_dev_ips: 366.32453213189797,
+          median: 364744.0,
+          percentiles: %{50 => 364744.0, 99 => 604033.6},
+          mode: [365935, 364085],
+          minimum: 344874,
+          maximum: 723469,
+          relative_more: 3.474998410521854,
+          relative_less: 0.28776991579970995,
+          absolute_difference: 271281.4720366636,
+          sample_size: 7867
         },
-        samples: [402775, 384325, 393005, 372504, 381635, 377305, 393945, 370535, 369375, 377814,
-         390025, 373645, 380175, 375055, 395085, 373665, 379454, 382095, 391755, 372635, 376215,
-         375205, 397375, 373764, 373324, 377825, 389195, 381545, 369475, 371804, 386175, 369435,
-         375135, ...]
+        samples: [374945, 368595, 380054, 371785, 367825, 368374, 396465, 368915, 367254, 369785,
+         381445, 374224, 366655, 366324, 376195, 364235, 364544, 359135, 378554, 375425, 371825,
+         377094, 394935, 368225, 367934, 366344, 375485, 369414, 357755, 360014, 384405, 367495,
+         ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -458,15 +674,14 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 585056,
           minimum: 585056,
           maximum: 585056,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 6595
+          relative_more: 5.7798150636212755,
+          relative_less: 0.17301591642509434,
+          absolute_difference: 483832.0,
+          sample_size: 6572
         },
         samples: [585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
          585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
-         585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056,
-         ...]
+         585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, 585056, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -480,14 +695,14 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 133759,
           minimum: 133759,
           maximum: 133759,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 7670
+          relative_more: 6.124496336996337,
+          relative_less: 0.16327873264602755,
+          absolute_difference: 111919.0,
+          sample_size: 7866
         },
         samples: [133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759,
          133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759,
-         133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, ...]
+         133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, 133759, ...]
       }
     },
     %Benchee.Scenario{
@@ -503,25 +718,24 @@ PartTwo             319 - 0.79x reduction count -85
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 805258.9110932044,
-          ips: 1241.8366145646482,
-          std_dev: 49272.48885471578,
-          std_dev_ratio: 0.06118838075051461,
-          std_dev_ips: 75.98597160191176,
-          median: 798761.0,
-          percentiles: %{50 => 798761.0, 99 => 922288.44},
-          mode: 769040,
-          minimum: 735200,
-          maximum: 1959215,
-          relative_more: 2.035709414879507,
-          relative_less: 0.49122924553511965,
-          absolute_difference: 409692.1837364576,
-          sample_size: 3723
+          average: 806888.402960969,
+          ips: 1239.3287551666203,
+          std_dev: 142671.99198040564,
+          std_dev_ratio: 0.17681750221821815,
+          std_dev_ips: 219.13501491577543,
+          median: 772739.0,
+          percentiles: %{50 => 772739.0, 99 => 1003121.2000000002},
+          mode: 758739,
+          minimum: 729670,
+          maximum: 7673585,
+          relative_more: 7.361533022524352,
+          relative_less: 0.13584127068917076,
+          absolute_difference: 697279.6569983953,
+          sample_size: 3715
         },
-        samples: [954462, 944122, 793090, 771610, 770260, 763610, 776030, 771110, 893461, 807200,
-         801000, 808881, 827660, 808971, 806540, 797230, 824940, 811640, 802750, 805470, 826591,
-         803850, 810301, 806960, 825780, 801750, 799341, 806810, 823431, 802270, 803090, 806880,
-         ...]
+        samples: [1094813, 947892, 777070, 759019, 758919, 756840, 784610, 890491, 888131, 796500,
+         801010, 800780, 818290, 928411, 813670, 792480, 820471, 795869, 794980, 791620, 961012,
+         801290, 795910, 798260, 822130, 795090, 809200, 906002, 820050, 797000, 796570, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -535,15 +749,15 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 1923224,
           minimum: 1923224,
           maximum: 1923224,
-          relative_more: 3.287247716457912,
-          relative_less: 0.30420585433626035,
-          absolute_difference: 1338168.0,
-          sample_size: 1836
+          relative_more: 18.999683869438076,
+          relative_less: 0.05263245466986685,
+          absolute_difference: 1822000.0,
+          sample_size: 1712
         },
         samples: [1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
          1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
          1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224, 1923224,
-         1923224, 1923224, ...]
+         1923224, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -557,20 +771,95 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 100489,
           minimum: 100489,
           maximum: 100489,
-          relative_more: 0.7512690734829058,
-          relative_less: 1.331081013842311,
-          absolute_difference: -33270.0,
-          sample_size: 3160
+          relative_more: 4.6011446886446885,
+          relative_less: 0.217337220989362,
+          absolute_difference: 78649.0,
+          sample_size: 3106
         },
         samples: [100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489,
          100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489,
-         100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, ...]
+         100489, 100489, 100489, 100489, 100489, 100489, 100489, 100489, ...]
       }
     },
     %Benchee.Scenario{
-      name: "PartOne",
-      job_name: "PartOne",
-      function: &PartOne.solve/1,
+      name: "PartTwoInline",
+      job_name: "PartTwoInline",
+      function: &PartTwoInline.solve/1,
+      input_name: "input",
+      input: "jjfvnnlfivejj1\n6fourfour\nninevbmltwo69\npcg91vqrfpxxzzzoneightzt\njpprthxgjfive3one1qckhrptpqdc\nmxphxfnffninethreetdj5jgknqfrxmhxfivexcxqv\nthree7pktwo4279z\n1qcbszfgonedjcqj66929\nfivesixthreeptcqjnkzgdfgzspmlvmmhn3\nvm2sixseven\n1nine6oneeightnine5lfrzmzh7\n7onevsffj78ninejcnnvgn65\nqstwonepcd3twosixrmcnxhfzv\n3bnjfrfourseventwo\nzpcdmvmktlrrq8sixgjtxxjpt8fcstt1\nnine1gkmptbfsix87\n9ldmlbchvnvgfivesixnine7zrt\n45mjmblfqjvf9\nonehcpgmvd837sgzgsqqrtseven\nrhjfvkznjdvlgv9one8\n22xkkdsvfvfourhdpchs\nsixzjx5kvjbcfgcsrjndznkrtf6\n1fourmk8three3seven\n4716lpzhdcbone6seventwo\n443two27\n9sgtwoseven6\npjtbhxchqfseven18tznxpbsppk\n9eightwonkt\nhtsgxmrfsevenone8qjxhjsixnbsvcf5\n5jmnjnnfsfoursevenprtjzdxmxj7six\ndthreenrzonefourcxfrzsvtfz9xb\n6kvfn\nvlfbzpbpseven8tspgqfdzkmfivefourzjzdbxgtvx\n2rfqtfttqzkkzdjbjxnx51xrzczxmfmc2two\n3fnncmsdz1bnxvlfxng\nseven789bgzpszjd3\n6four8gjsmbztmp\nsjvmmb9h\n6jqttjkpjc145\n9threedzjjqnhrngktscfmc\n5onesix\nnine2onelpzhtrbninexkgtjqg\n6nined\n29xzfour7seven9pcvdbcgvtv\nhjdtscdc6twotwosixsevensix9six\nstmpvhnssixtwoffnhpn25\n45fourbpsghkqxqm9fmvhssbntdtwo64\nnine835four\nleightwothreesevenlhlmqcgcpfour9\nfgsfsqgkcctzcltpvpjhlb5eight4one\nfour9four184five9\n67seven7twobdcltwonenh\nnsdbone5two16\nsixsix3jxfctsrsvfcrpbxtthmspdlqqrnckxtngnx\nfxftk3svcczpknmfourhlndmg\neight4sevenmrlkcqx4three\n7ninerpcrqt46gtnlzlmknine\nhppggtwohcckscs5eighttwo\nphzdqznlbkthreephllsb32eighttwo9six\n6four8fxcmngbnine3\nseven6five23seven\n9seven6bfqkxsjvcpninehmprgsldb\ntffjstchhs3rnjsmlnr3sevenlkjzkrdg3mmlgbgnnjzoneightm\n913\nlvsqbjjsonethreeone864ncrlpdghgkfive\nfvlmhpxcrktwo3ninejm6eightxmc\nsevenjbnc2zvxnr4\nmqjztddmfmnskhlvvp2\nsix1fivesixsevenninenine\nvpbpbsixsqvxfvf6\n6jjqln83one\n3dbone3\nssczbsgp2fourdknjszzbvtlgtdplgplrnznmhdfivefdd\nthreesevenqctdslt457\neightthree9eightfiveninetzhmhg\nbsmzhmrm1eight5\npzhpleighttbhhfxfdgprfjsxrzl7sixsixjgghqbr\none5onecfdbpvxbdlmmdbxqdlbldjbz8\nqxsbz4rjdgcfsvmqthreeone3mtwo\n13zls3\nzpjlgbjrkl6four5\n264sevenfive\n413vhsevennpbnine\ngn9sevenhhhnblflxkeightnine\nhgdfdsdb5seven\neightczrstqtcjmrpbhhdxrflkcjpsdjbskfvzdglt6nine\njrgr15mzkpt5\nlxzlvmrdcvglcjsjzxm3748hjlvtgz\nninekxcqcpztqfoureightsrdhtmnbpsqkc5\nvxfdkmp4fourtwopdpfmcqnrqkmvf\nprkkmcccpone4qthree\nlxxqfourkrttdqlhkjhp5\nfive7three\nsixmljbdl2seven8six3ffrfc\n6threexgtvlxthree5fiveseven\nthree86pztxhlcfour\neightfiveeight79\n5ljzqvbgknk4\nseven4cnrxrv9\nbrtwone8jsvbpstpmlbrxrjfivehhhqbvk\nthree69two3dhvzj9\nfourfoursevenninelpjs5threevnc3\n42nine441xbc\nsevenfour2tqb42one\nbtccgptzllfivesixtwo6\nhdbzgcmznbnrq8cvzrqtpqm\njqzmone5threehrqhbdnfxhkqnvm\n98nrcvftzpslxnine\nfive58one8snpvggzjbqthree79\nlkccfpfn37onenine6\ncss9four2\njbtffive6mtfzvkdpjnthreeeight\n224fourtwojc4\nspceightwolbrcfkbrtwo8dkfmvrmrglmrsxlseven9nine\nthreeckdrrznbbhnpsrmbrxlmfjz1twothree2\n3twokcfivetwosix4\nk12mqeighthgdtthxjtwo\nconeightqtpgsjseven5dzqpvgtjm\ndpkjqkx22llklllblknine4\nsvjmxbq8hfzjsbtccjdmqvbjcpklmqbseven665\n8rbfzjxlqx\nonefive3nineeight5\neightqrlkf4two\n931\n41cvfivebfsxdkljjjkjhm8ftfdtnpsdmtkln\nsixjcnbeightnjtbck72dg\ntworvqfjdlr545lbpmlxknsd\nkgnt7fiveone3\ntwofourrxmcmj894stppprqjf\nqcqpxnztmntwok34three28\nfour1sevennlqvbk\n6fkjkbc\n2htpxbqvtg3one\n2threezhxzfslfxhvzdbfour15\nnrfdrzdjtlthreeonennzfbone9one\nsixtwosevenqplrqvxreight6\ndjmzrfq3eight7five5\njthreeeight51sixqlvgvm\nfoureighteight4vvg98\ntttrnk2ctfpk7692mbccxhmpnl2\nbbsix2\n1two3five89zjrjnbpt6\n29787jbhkhtbnbgfoursixfour\nvpzmcqcvfour58\n9eightfcvfeight4one\ncdbdlseven6zvzl3tshhdtlczsstdbksthree\nthree78\nhdmmprbbk9hvkpb\nvfivencslcc974\n6jthreesevenstksbsxttctjkdnxgjseven\nsixeight38sevenfive\n7sixnzcfgfjpzmcdsprgcnvspfive\ntttcfpm9sevennine\nx7dfxhgtqmeightveightfgrqj\nzktxptkzztwobztnfqvgxlkrsdhqhntqcnfknine6\n9kthreenglrnrxn8sixzlfdmfcdvnd\nxjznine3332jtrfnkf\n688k3eightone\n4four2chz\n1zpbmzvgxmhqdkr3four89four\nnqbthreeztjmkdgtwo53\nqvfjzclkrkslfmtpdhjeight4fivefour\n964eight91qhghxjxhcdslsnfour\n45twojrbjxb\n292sixthreekgzpzxxxk\n6dgmmtwotwo\n1msixthree4sixeighttwoeight\nsixfourt9k\none1five6fourthreetwo7two\nfourjmbfrhltwosix42\nfrgfnk8\n138\n4nn79fourfour28\n7zs5eightonenineqnzpsf6\nbqjndhdtqqhpmltzfv27bqvgklpmfvhgvplbpnxhjvprpldpg\n48tcrntjbninesbkkbbd\nnineeight5nineljhnxhqbpkbbkttwo\nscbbhqpcxthree1three1\nvlczgnr" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 855265.0741585853,
+          ips: 1169.2281495111977,
+          std_dev: 14394.869412454998,
+          std_dev_ratio: 0.0168308865255801,
+          std_dev_ips: 19.67914630693697,
+          median: 854980.5,
+          percentiles: %{50 => 854980.5, 99 => 869161.0},
+          mode: 856881,
+          minimum: 828680,
+          maximum: 1638170,
+          relative_more: 7.802890788027249,
+          relative_less: 0.128157631212063,
+          absolute_difference: 745656.3281960116,
+          sample_size: 3506
+        },
+        samples: [853270, 859311, 860531, 860370, 854041, 867711, 862600, 852471, 856491, 853150,
+         855211, 863121, 866550, 859181, 863011, 860451, 855180, 861301, 866301, 856000, 866351,
+         841961, 856730, 864681, 871061, 856391, 863570, 853781, 852400, 861041, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 420696.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 420696.0,
+          percentiles: %{50 => 420696.0, 99 => 420696.0},
+          mode: 420696,
+          minimum: 420696,
+          maximum: 420696,
+          relative_more: 4.156089464949024,
+          relative_less: 0.2406107973453515,
+          absolute_difference: 319472.0,
+          sample_size: 1804
+        },
+        samples: [420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696,
+         420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696,
+         420696, 420696, 420696, 420696, 420696, 420696, 420696, 420696, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 38038.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 38038.0,
+          percentiles: %{50 => 38038.0, 99 => 38038.0},
+          mode: 38038,
+          minimum: 38038,
+          maximum: 38038,
+          relative_more: 1.7416666666666667,
+          relative_less: 0.5741626794258373,
+          absolute_difference: 16198.0,
+          sample_size: 3420
+        },
+        samples: [38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038,
+         38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038, 38038,
+         38038, 38038, 38038, 38038, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwoInline",
+      job_name: "PartTwoInline",
+      function: &PartTwoInline.solve/1,
       input_name: "test_input",
       input: "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n",
       before_each: nil,
@@ -580,65 +869,133 @@ PartTwo             319 - 0.79x reduction count -85
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 1366.5467348081904,
-          ips: 731771.533697573,
-          std_dev: 19043.50301133216,
-          std_dev_ratio: 13.935493405576883,
-          std_dev_ips: 10197597.38223141,
-          median: 1230.0,
-          percentiles: %{50 => 1230.0, 99 => 1780.0},
-          mode: 1230,
-          minimum: 1180,
-          maximum: 14135631,
+          average: 306.2190367434602,
+          ips: 3265636.293009979,
+          std_dev: 25044.351725523553,
+          std_dev_ratio: 81.78574392977681,
+          std_dev_ips: 267082493.62789977,
+          median: 260.0,
+          percentiles: %{50 => 260.0, 99 => 420.0},
+          mode: 250,
+          minimum: 210,
+          maximum: 45224962,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 1872769
+          sample_size: 5583497
         },
-        samples: [5570, 6250, 1360, 1250, 2510, 1340, 1330, 1240, 1220, 6000, 3070, 1340, 1220,
-         1220, 1210, 1210, 1230, 1220, 1460, 1240, 2290, 1240, 1210, 1210, 1190, 1200, 1190, 1450,
-         1250, 1240, 2170, ...]
+        samples: [1850, 710, 410, 5000, 500, 590, 510, 390, 340, 340, 450, 390, 340, 330, 320, 350,
+         1350, 360, 390, 360, 340, 330, 1020, 320, 350, 350, 340, 330, 820, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 1672.0,
+          average: 488.0,
           ips: nil,
           std_dev: 0.0,
           std_dev_ratio: 0.0,
           std_dev_ips: nil,
-          median: 1672.0,
-          percentiles: %{50 => 1672.0, 99 => 1672.0},
-          mode: 1672,
-          minimum: 1672,
-          maximum: 1672,
+          median: 488.0,
+          percentiles: %{50 => 488.0, 99 => 488.0},
+          mode: 488,
+          minimum: 488,
+          maximum: 488,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 198141
+          sample_size: 326105
         },
-        samples: [1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672,
-         1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672,
-         1672, 1672, ...]
+        samples: [488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488,
+         488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 404.0,
+          average: 43.0,
           ips: nil,
           std_dev: 0.0,
           std_dev_ratio: 0.0,
           std_dev_ips: nil,
-          median: 404.0,
-          percentiles: %{50 => 404.0, 99 => 404.0},
-          mode: 404,
-          minimum: 404,
-          maximum: 404,
+          median: 43.0,
+          percentiles: %{50 => 43.0, 99 => 43.0},
+          mode: 43,
+          minimum: 43,
+          maximum: 43,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 36465
+          sample_size: 37939
         },
-        samples: [404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404,
-         404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, ...]
+        samples: ~c"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" ++ ...
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOneInline",
+      job_name: "PartOneInline",
+      function: &PartOneInline.solve/1,
+      input_name: "test_input",
+      input: "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 324.1358854370463,
+          ips: 3085125.8528553764,
+          std_dev: 24887.079968305996,
+          std_dev_ratio: 76.7797738123,
+          std_dev_ips: 236875265.1647149,
+          median: 280.0,
+          percentiles: %{50 => 280.0, 99 => 440.0},
+          mode: 240,
+          minimum: 190,
+          maximum: 44434743,
+          relative_more: 1.058509911350143,
+          relative_less: 0.9447242668937195,
+          absolute_difference: 17.916848693586076,
+          sample_size: 5402654
+        },
+        samples: [1300, 410, 250, 5650, 280, 260, 260, 250, 240, 260, 240, 230, 230, 230, 220, 220,
+         980, 220, 230, 210, 230, 250, 770, 220, 230, 250, 250, 240, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 488.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 488.0,
+          percentiles: %{50 => 488.0, 99 => 488.0},
+          mode: 488,
+          minimum: 488,
+          maximum: 488,
+          relative_more: 1.0,
+          relative_less: 1.0,
+          absolute_difference: 0.0,
+          sample_size: 324302
+        },
+        samples: [488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488,
+         488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 43.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 43.0,
+          percentiles: %{50 => 43.0, 99 => 43.0},
+          mode: 43,
+          minimum: 43,
+          maximum: 43,
+          relative_more: 1.0,
+          relative_less: 1.0,
+          absolute_difference: 0.0,
+          sample_size: 37699
+        },
+        samples: ~c"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" ++ ...
       }
     },
     %Benchee.Scenario{
@@ -654,24 +1011,23 @@ PartTwo             319 - 0.79x reduction count -85
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 1803.4093842355826,
-          ips: 554505.265826746,
-          std_dev: 18089.736979076424,
-          std_dev_ratio: 10.03085441231869,
-          std_dev_ips: 5562161.592372163,
-          median: 1640.0,
-          percentiles: %{50 => 1640.0, 99 => 2300.0},
-          mode: 1630,
-          minimum: 1540,
-          maximum: 11919391,
-          relative_more: 1.3196836509866678,
-          relative_less: 0.7577573604494874,
-          absolute_difference: 436.86264942739217,
-          sample_size: 1471212
+          average: 1848.842536064664,
+          ips: 540878.9447956667,
+          std_dev: 16737.88411137696,
+          std_dev_ratio: 9.053169096273727,
+          std_dev_ips: 4896668.547849273,
+          median: 1670.0,
+          percentiles: %{50 => 1670.0, 99 => 2970.0},
+          mode: 1660,
+          minimum: 1580,
+          maximum: 12072500,
+          relative_more: 6.037647285833378,
+          relative_less: 0.16562742947014827,
+          absolute_difference: 1542.6234993212038,
+          sample_size: 1437834
         },
-        samples: [13540, 3430, 2640, 2280, 2300, 3050, 2740, 1630, 2160, 2190, 1660, 7110, 2230,
-         1650, 2170, 1700, 6200, 1730, 2670, 1670, 1670, 2240, 1660, 2020, 2890, 1640, 1670, 1620,
-         2330, 1700, ...]
+        samples: [15900, 3650, 3720, 3860, 3830, 3100, 2900, 1720, 2300, 2310, 2600, 9821, 2800,
+         1760, 2230, 1700, 2590, 1710, 2710, 1740, 1710, 2410, 1800, 2070, 2610, 1660, 1640, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -685,14 +1041,13 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 4376,
           minimum: 4376,
           maximum: 4376,
-          relative_more: 2.617224880382775,
-          relative_less: 0.3820840950639854,
-          absolute_difference: 2704.0,
-          sample_size: 147189
+          relative_more: 8.967213114754099,
+          relative_less: 0.11151736745886655,
+          absolute_difference: 3888.0,
+          sample_size: 144653
         },
         samples: [4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376,
-         4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376,
-         4376, ...]
+         4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, 4376, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -706,13 +1061,85 @@ PartTwo             319 - 0.79x reduction count -85
           mode: 319,
           minimum: 319,
           maximum: 319,
-          relative_more: 0.7896039603960396,
-          relative_less: 1.2664576802507836,
-          absolute_difference: -85.0,
-          sample_size: 36811
+          relative_more: 7.4186046511627906,
+          relative_less: 0.13479623824451412,
+          absolute_difference: 276.0,
+          sample_size: 36386
         },
         samples: [319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319,
-         319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, 319, ...]
+         319, 319, 319, 319, 319, 319, 319, 319, 319, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 2009.4880781582528,
+          ips: 497639.1802814404,
+          std_dev: 11110.370721600611,
+          std_dev_ratio: 5.528955778520244,
+          std_dev_ips: 2751425.021435147,
+          median: 2020.0,
+          percentiles: %{50 => 2020.0, 99 => 2540.0},
+          mode: 1260,
+          minimum: 1190,
+          maximum: 9877232,
+          relative_more: 6.562257198404464,
+          relative_less: 0.1523865904315878,
+          absolute_difference: 1703.2690414147926,
+          sample_size: 1277613
+        },
+        samples: [5940, 8000, 1430, 1260, 2530, 1230, 1200, 1230, 2230, 4670, 1330, 1210, 1220,
+         1210, 1200, 1830, 1240, 1200, 1500, 2410, 1290, 1250, 1240, 1290, 1250, 2620, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1672.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1672.0,
+          percentiles: %{50 => 1672.0, 99 => 1672.0},
+          mode: 1672,
+          minimum: 1672,
+          maximum: 1672,
+          relative_more: 3.4262295081967213,
+          relative_less: 0.291866028708134,
+          absolute_difference: 1184.0,
+          sample_size: 201446
+        },
+        samples: [1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672,
+         1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, 1672, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 404.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 404.0,
+          percentiles: %{50 => 404.0, 99 => 404.0},
+          mode: 404,
+          minimum: 404,
+          maximum: 404,
+          relative_more: 9.395348837209303,
+          relative_less: 0.10643564356435643,
+          absolute_difference: 361.0,
+          sample_size: 36073
+        },
+        samples: [404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404,
+         404, 404, 404, 404, 404, 404, 404, 404, ...]
       }
     }
   ]
@@ -813,4 +1240,4 @@ cyclic
 true
 ```
 
-<!-- livebook:{"offset":38707,"stamp":{"token":"XCP.turwn3ZSR0bExHP4WUwiRIHZsJIlxTjLJCHRRFEwpsXntSru9FLEk31HBkoh3Frw4bnX2ZzrpwBc08xsyVKyVX_UGX-HmjVQhDKc_8nvMzKc0wMruck","version":2}} -->
+<!-- livebook:{"offset":70436,"stamp":{"token":"XCP.swcMhcwiaVSGDYNErJjAx1nEFbmkhT0IMLxyNS0cPEIEc632nV9AL3HBF71Q4ZqZpukjBRbtgXFZzuvodg_nENy980PEeOPGwGcOnkTiSz_LfpXAQkA","version":2}} -->
