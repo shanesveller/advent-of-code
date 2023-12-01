@@ -3,36 +3,12 @@
 # Elixir 2023-01
 
 ```elixir
-Mix.install(
-  [
-    {:benchee, "~> 1.2"},
-    # {:exla, "~> 0.6.0"},
-    # {:explorer, "~> 0.7"},
-    {:kino, "~> 0.11.0"},
-    {:kino_aoc, "~> 0.1.5"},
-    # {:kino_vega_lite, "~> 0.1.11"},
-    {:nimble_parsec, "~> 1.4"}
-    # {:nx, "~> 0.6.0"}
-  ]
-  # config: [
-  #   nx: [
-  #     default_backend: EXLA.Backend,
-  #     default_defn_options: [compiler: EXLA]
-  #   ],
-  #   exla: [
-  #     default_client: :cuda,
-  #     clients: [
-  #       host: [platform: :host],
-  #       cuda: [platform: :cuda]
-  #     ]
-  #   ]
-  # ],
-  # system_env: [
-  #   XLA_TARGET: "cuda120"
-  # ]
-)
-
-# Nx.global_default_backend(EXLA.Backend)
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"},
+  {:nimble_parsec, "~> 1.4"}
+])
 ```
 
 ## Problem
@@ -141,17 +117,6 @@ defmodule PartTwo do
     end
   end
 
-  # defp parsec(input) do
-  #   for line <- String.split(input, "\n", trim: true) do
-  #     {:ok, digits, "" = _remaining, _, _, _} = DigitOrWord.digits(line)
-  #     digits = List.flatten(digits)
-
-  #     [0, -1]
-  #     |> Enum.map(&Enum.at(digits, &1))
-  #     |> Integer.undigits()
-  #   end
-  # end
-
   def extract_digit(""), do: {nil, ""}
 
   for n <- 1..9 do
@@ -164,8 +129,6 @@ defmodule PartTwo do
   end
 
   def extract_digit(<<_hd::binary-size(1), rest::binary>>), do: {nil, rest}
-
-  # defp extract_digit_no_tail()
 
   def process(input), do: Enum.sum(input)
 
@@ -266,8 +229,6 @@ ExUnit.run()
 defmodule PartOneInline do
   def solve(input), do: do_solve(input, {0, 0, 0})
 
-  # defp do_solve("", {sum, []}), do: sum
-
   defp do_solve("", {sum, first_digit, last_digit}) do
     sum + last_digit + first_digit * 10
   end
@@ -316,8 +277,6 @@ PartOneInline.solve(input)
 ```elixir
 defmodule PartTwoInline do
   def solve(input), do: do_solve(input, {0, 0, 0}, true)
-
-  # defp do_solve("", {sum, []}), do: sum
 
   defp do_solve("", {sum, first_digit, last_digit}, _prepend) do
     sum + last_digit + first_digit * 10
@@ -1240,4 +1199,4 @@ cyclic
 true
 ```
 
-<!-- livebook:{"offset":70436,"stamp":{"token":"XCP.swcMhcwiaVSGDYNErJjAx1nEFbmkhT0IMLxyNS0cPEIEc632nV9AL3HBF71Q4ZqZpukjBRbtgXFZzuvodg_nENy980PEeOPGwGcOnkTiSz_LfpXAQkA","version":2}} -->
+<!-- livebook:{"offset":69504,"stamp":{"token":"XCP.F-knMd2veBDeki-y6Olw9yEU3zQqd2WORtzKOWPzFnqsCFvhrH4Y-z605ZUuM7e_uMC3OTgG5GdWr7LXXaL3JdUSkTmRsS7IlvUIzxU7sv2XxXTQcxc","version":2}} -->
