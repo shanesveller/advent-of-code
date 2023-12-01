@@ -1,0 +1,76 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# CUDA Tester
+
+```elixir
+Mix.install(
+  [
+    {:nx, "~> 0.6.1"},
+    {:exla, "~> 0.6.1"}
+  ],
+  config: [
+    nx: [
+      default_backend: EXLA.Backend,
+      default_defn_options: [compiler: EXLA]
+    ],
+    exla: [
+      default_client: :cuda,
+      clients: [
+        host: [platform: :host],
+        cuda: [platform: :cuda]
+      ]
+    ]
+  ],
+  system_env: [
+    XLA_TARGET: "cuda120"
+  ]
+)
+```
+
+## Section
+
+The next segment should contain output about my GPU ID, cuDNN, and allocating memory, and the tensor should show `EXLA.Backend<cuda:0>`.
+
+```elixir
+Nx.with_default_backend({EXLA.Backend, client: :cuda}, fn ->
+  Nx.iota({10, 10})
+  |> Nx.add(10)
+end)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+08:05:24.476 [info] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+
+08:05:24.478 [info] XLA service 0x7f09f844a8b0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+
+08:05:24.478 [info]   StreamExecutor device (0): NVIDIA GeForce RTX 3060, Compute Capability 8.6
+
+08:05:24.478 [info] Using BFC allocator.
+
+08:05:24.478 [info] XLA backend allocating 11366557286 bytes on device 0 for BFCAllocator.
+
+08:05:24.535 [info] Loaded cuDNN version 8901
+
+08:05:24.581 [info] Using nvlink for parallel linking
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[10][10]
+  EXLA.Backend<cuda:0, 0.2161197802.1872887878.193513>
+  [
+    [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+    [30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+    [40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+    [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
+    ...
+  ]
+>
+```
