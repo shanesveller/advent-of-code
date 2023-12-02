@@ -7,11 +7,8 @@ Mix.install(
   [
     {:benchee, "~> 1.2"},
     # {:exla, "~> 0.6.0"},
-    # {:explorer, "~> 0.7"},
     {:kino, "~> 0.11.0"},
     {:kino_aoc, "~> 0.1.5"}
-    # {:kino_vega_lite, "~> 0.1.11"},
-    # {:nimble_parsec, "~> 1.4"},
     # {:nx, "~> 0.6.0"}
   ]
   # config: [
@@ -125,8 +122,10 @@ end
 defmodule PartTwo do
   import PartOne, only: [parse: 1]
 
-  def process(_input) do
-    ""
+  def process(input) do
+    Enum.reduce(input, 0, fn {_game, red, blue, green}, sum ->
+      sum + red * blue * green
+    end)
   end
 
   def solve(input) do
@@ -140,7 +139,7 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 8, ...>>, {:solve, 1}}
 ```
 
 ## Solutions
@@ -162,7 +161,7 @@ PartTwo.solve(input)
 <!-- livebook:{"output":true} -->
 
 ```
-""
+86036
 ```
 
 <!-- livebook:{"branch_parent_index":1} -->
@@ -196,15 +195,18 @@ end
 defmodule PartTwoTest do
   use ExUnit.Case, async: true
 
-  @moduletag :skip
-
   doctest PartOne
 
   describe "Part Two" do
     @test_input """
+    Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+    Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+    Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+    Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+    Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
     """
-    test "TODO" do
-      assert PartTwo.solve(@test_input) == false
+    test "sums product of cube counts" do
+      assert PartTwo.solve(@test_input) == 2286
     end
   end
 end
@@ -215,9 +217,9 @@ ExUnit.run()
 <!-- livebook:{"output":true} -->
 
 ```
-***...
+......
 Finished in 0.00 seconds (0.00s async, 0.00s sync)
-4 doctests, 2 tests, 0 failures, 3 skipped
+4 doctests, 2 tests, 0 failures
 
 Randomized with seed 12345
 ```
@@ -225,7 +227,7 @@ Randomized with seed 12345
 <!-- livebook:{"output":true} -->
 
 ```
-%{total: 6, skipped: 3, failures: 0, excluded: 0}
+%{total: 6, skipped: 0, failures: 0, excluded: 0}
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
@@ -237,8 +239,8 @@ Randomized with seed 12345
 ```elixir
 Benchee.run(
   %{
-    "PartOne" => &PartOne.solve/1
-    # "PartTwo" => &PartTwo.solve/1
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
   },
   inputs: %{
     input: input,
@@ -274,35 +276,54 @@ memory time: 3 s
 reduction time: 3 s
 parallel: 1
 inputs: input, test_input
-Estimated total run time: 22 s
+Estimated total run time: 44 s
 
 Benchmarking PartOne with input input ...
 Benchmarking PartOne with input test_input ...
+Benchmarking PartTwo with input input ...
+Benchmarking PartTwo with input test_input ...
 
 ##### With input input #####
 Name              ips        average  deviation         median         99th %
-PartOne        1.35 K      741.37 μs     ±4.32%      735.92 μs      791.23 μs
+PartTwo        1.41 K      708.90 μs     ±2.85%      702.37 μs      787.84 μs
+PartOne        1.37 K      730.18 μs     ±1.45%      728.23 μs      762.17 μs
+
+Comparison: 
+PartTwo        1.41 K
+PartOne        1.37 K - 1.03x slower +21.29 μs
 
 Memory usage statistics:
 
 Name            average  deviation         median         99th %
+PartTwo       460.56 KB     ±0.00%      460.55 KB      460.55 KB
 PartOne       465.40 KB     ±0.00%      465.40 KB      465.40 KB
+
+Comparison: 
+PartTwo       460.55 KB
+PartOne       465.40 KB - 1.01x memory usage +4.84 KB
 
 Reduction count statistics:
 
 Name    Reduction count
-PartOne         47.07 K
+PartTwo         46.54 K
+PartOne         47.07 K - 1.01x reduction count +0.53 K
 
 **All measurements for reduction count were the same**
 
 ##### With input test_input #####
 Name              ips        average  deviation         median         99th %
-PartOne       43.58 K       22.95 μs    ±13.85%       22.28 μs       33.53 μs
+PartOne       44.46 K       22.49 μs    ±15.07%       21.78 μs       33.76 μs
+PartTwo       44.23 K       22.61 μs    ±23.90%       21.96 μs       33.51 μs
+
+Comparison: 
+PartOne       44.46 K
+PartTwo       44.23 K - 1.01x slower +0.115 μs
 
 Memory usage statistics:
 
 Name       Memory usage
 PartOne        15.23 KB
+PartTwo        14.45 KB - 0.95x memory usage -0.78125 KB
 
 **All measurements for memory usage were the same**
 
@@ -310,6 +331,7 @@ Reduction count statistics:
 
 Name    Reduction count
 PartOne          1.53 K
+PartTwo          1.47 K - 0.96x reduction count -0.06100 K
 
 **All measurements for reduction count were the same**
 ```
@@ -356,6 +378,83 @@ PartOne          1.53 K
   },
   scenarios: [
     %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "input",
+      input: "Game 1: 12 red, 2 green, 5 blue; 9 red, 6 green, 4 blue; 10 red, 2 green, 5 blue; 8 blue, 9 red\nGame 2: 3 green, 7 red; 3 blue, 5 red; 2 green, 1 blue, 6 red; 3 green, 2 red, 3 blue\nGame 3: 12 red, 18 blue, 3 green; 14 red, 4 blue, 2 green; 4 green, 15 red\nGame 4: 14 blue, 8 red, 10 green; 7 green, 9 blue, 4 red; 4 green, 5 red\nGame 5: 2 red, 1 blue, 4 green; 1 blue, 1 red, 5 green; 6 green, 3 red; 10 blue, 4 green, 1 red\nGame 6: 5 red, 5 blue, 1 green; 5 blue, 15 red, 2 green; 3 green, 1 red, 9 blue\nGame 7: 9 red, 8 blue, 13 green; 9 red, 7 blue, 10 green; 7 blue, 2 red, 11 green; 4 red, 6 blue, 10 green; 3 blue, 12 green, 1 red\nGame 8: 20 red, 5 green, 10 blue; 14 red, 8 blue, 5 green; 5 green, 4 blue, 9 red; 18 red, 1 green; 2 blue, 1 green, 5 red\nGame 9: 3 blue; 3 blue, 4 green, 1 red; 8 green, 2 blue, 4 red; 5 green, 4 red\nGame 10: 18 red, 11 green, 3 blue; 2 blue, 19 red, 7 green; 4 green, 1 blue, 6 red; 4 green, 2 red, 4 blue; 10 green, 5 red, 2 blue; 13 red, 12 green, 4 blue\nGame 11: 5 green, 5 blue, 3 red; 2 red, 8 blue, 4 green; 4 blue, 4 green, 2 red; 1 blue, 3 red, 2 green; 4 blue, 4 green; 6 blue, 2 red\nGame 12: 6 blue, 1 green, 4 red; 12 blue, 4 red; 12 blue, 2 red, 6 green\nGame 13: 11 red, 17 blue, 7 green; 20 red, 12 green, 9 blue; 15 red, 15 green, 14 blue; 7 red, 6 green, 3 blue\nGame 14: 8 red, 17 green, 6 blue; 5 red, 13 blue, 7 green; 2 red, 15 green, 4 blue; 9 blue, 2 green; 7 green, 2 blue, 8 red; 10 green, 14 blue, 10 red\nGame 15: 14 red, 4 green, 4 blue; 14 red, 2 green, 16 blue; 10 blue, 2 green, 6 red\nGame 16: 2 red, 3 green; 5 green; 1 red, 1 blue; 2 red, 3 green, 1 blue; 5 red, 4 green; 5 red, 4 green\nGame 17: 4 blue, 3 green, 9 red; 3 blue, 8 red, 1 green; 1 blue, 5 green; 8 green, 2 red; 10 red, 1 green\nGame 18: 10 blue, 5 red; 1 green, 9 red, 9 blue; 5 blue, 3 red; 3 red, 1 blue; 2 blue, 9 red, 1 green; 6 red, 7 blue, 1 green\nGame 19: 9 green, 2 red, 12 blue; 3 green, 9 red, 16 blue; 2 green, 17 blue; 11 green, 3 blue, 7 red; 2 red, 10 blue, 11 green\nGame 20: 17 blue, 16 green; 13 green, 12 blue, 13 red; 6 red, 9 green, 6 blue\nGame 21: 1 green, 3 red, 1 blue; 1 blue, 2 green, 2 red; 2 green, 1 blue, 3 red\nGame 22: 7 green, 3 blue, 5 red; 2 green, 14 red, 3 blue; 2 green, 17 red; 2 blue, 15 red, 6 green; 4 green, 1 blue, 17 red\nGame 23: 4 blue, 2 red; 2 red, 7 blue, 1 green; 6 red, 5 blue, 5 green; 9 red, 4 blue; 10 blue, 8 red, 11 green\nGame 24: 1 red, 9 green, 5 blue; 14 green, 4 blue, 2 red; 5 blue, 1 red, 11 green; 3 blue, 2 red, 4 green\nGame 25: 3 green, 2 red, 1 blue; 2 blue, 10 green, 1 red; 8 red, 4 green, 1 blue; 3 blue, 15 red, 6 green; 2 blue, 13 red, 8 green; 2 red, 5 blue, 5 green\nGame 26: 5 green, 5 red; 12 green; 5 green, 3 blue, 4 red; 1 blue, 1 red, 17 green; 2 blue, 18 green\nGame 27: 1 blue, 7 green, 3 red; 3 red, 1 green, 13 blue; 4 green, 8 blue; 1 red, 3 green, 4 blue; 9 blue, 2 red\nGame 28: 9 red, 2 green, 5 blue; 5 red, 9 green; 5 blue, 1 red\nGame 29: 4 green, 10 blue, 13 red; 2 red, 5 green, 5 blue; 2 red, 9 green, 11 blue; 9 blue, 9 red, 13 green; 13 blue, 2 green, 14 red; 3 green, 8 blue, 5 red\nGame 30: 3 green, 7 red, 3 blue; 5 green, 5 blue, 12 red; 14 red, 6 green, 11 blue; 7 blue, 9 green, 11 red; 10 red, 1 blue, 4 green\nGame 31: 6 green, 5 blue, 17 red; 16 blue, 17 green, 14 red; 13 green, 13 blue, 3 red; 18 red, 8 green, 14 blue; 18 green, 1 blue; 16 red, 6 blue\nGame 32: 12 green, 2 blue; 6 blue, 5 red, 10 green; 13 green, 2 blue; 2 red, 6 blue, 6 green; 9 green, 8 red\nGame 33: 4 blue, 6 red, 2 green; 7 red, 5 blue; 3 blue, 1 red, 1 green\nGame 34: 2 red, 7 blue, 1 green; 2 blue, 1 green, 6 red; 6 red, 3 green, 7 blue; 4 green, 13 red, 1 blue; 15 blue, 1 green, 5 red\nGame 35: 8 blue, 12 red, 7 green; 2 blue, 14 red, 3 green; 14 green, 8 blue, 7 red; 15 red, 12 blue, 12 green; 11 blue, 14 red, 1 green\nGame 36: 11 red, 8 green, 2 blue; 17 red, 2 blue; 3 blue, 8 green, 19 red; 6 red, 3 blue, 3 green; 8 red, 5 green\nGame 37: 2 blue, 3 red, 12 green; 3 red, 7 green, 4 blue; 7 blue, 3 red, 8 green; 13 green, 3 red, 2 blue; 2 green\nGame 38: 2 blue, 14 red, 17 green; 1" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 708897.9631205674,
+          ips: 1410.6402501115986,
+          std_dev: 20210.207261181225,
+          std_dev_ratio: 0.028509331825719932,
+          std_dev_ips: 40.21641097714812,
+          median: 702371.0,
+          percentiles: %{50 => 702371.0, 99 => 787844.9999999999},
+          mode: [698116, 695216, 699566, 697326, 698596, 707166, 698996, 699156],
+          minimum: 678956,
+          maximum: 856167,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 4230
+        },
+        samples: [742616, 741056, 724267, 716236, 729327, 722886, 751127, 717926, 716616, 721577,
+         715756, 723816, 726607, 734006, 740667, 717596, 728817, 725656, 711746, 724727, 724706,
+         757767, 728416, 727016, 719986, 718116, 721247, 722636, 722666, 748217, 718536, 730347,
+         710446, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 471609.3370962684,
+          ips: nil,
+          std_dev: 20.902553840650338,
+          std_dev_ratio: 4.432175573399123e-5,
+          std_dev_ips: nil,
+          median: 471608.0,
+          percentiles: %{50 => 471608.0, 99 => 471608.0},
+          mode: 471608,
+          minimum: 471608,
+          maximum: 471936,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 3189
+        },
+        samples: [471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608,
+         471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608,
+         471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608, 471608,
+         ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 46540.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 46540.0,
+          percentiles: %{50 => 46540.0, 99 => 46540.0},
+          mode: 46540,
+          minimum: 46540,
+          maximum: 46540,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 3996
+        },
+        samples: [46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540,
+         46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540, 46540,
+         46540, 46540, 46540, 46540, 46540, 46540, 46540, ...]
+      }
+    },
+    %Benchee.Scenario{
       name: "PartOne",
       job_name: "PartOne",
       function: &PartOne.solve/1,
@@ -368,47 +467,46 @@ PartOne          1.53 K
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 741373.8009888751,
-          ips: 1348.8472328886703,
-          std_dev: 32049.77514814555,
-          std_dev_ratio: 0.0432302505232802,
-          std_dev_ips: 58.31100379541049,
-          median: 735918.0,
-          percentiles: %{50 => 735918.0, 99 => 791234.4},
-          mode: [733588, 731428, 733208, 734968, 737488, 737468, 733548],
-          minimum: 719527,
-          maximum: 1444666,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 4045
+          average: 730183.1222303384,
+          ips: 1369.5194664942517,
+          std_dev: 10587.743700246729,
+          std_dev_ratio: 0.014500121103739773,
+          std_dev_ips: 19.858198118095736,
+          median: 728226.0,
+          percentiles: %{50 => 728226.0, 99 => 762165.4},
+          mode: [725836, 726926],
+          minimum: 713816,
+          maximum: 976479,
+          relative_more: 1.0300257021702726,
+          relative_less: 0.9708495602517412,
+          absolute_difference: 21285.15910977102,
+          sample_size: 4107
         },
-        samples: [803328, 759968, 736649, 734208, 733307, 722338, 732758, 784189, 749108, 742488,
-         754208, 749708, 746228, 746918, 748318, 786739, 752078, 742228, 749918, 747428, 748408,
-         743968, 793509, 745638, 742768, 753148, 746238, 749638, 754518, 746848, 782579, 758958,
-         744778, ...]
+        samples: [765167, 763477, 742706, 742197, 750797, 748636, 743917, 752017, 739406, 745527,
+         746626, 741317, 740907, 750846, 744707, 743537, 750096, 740057, 741056, 743617, 737936,
+         741247, 746337, 743766, 739187, 751627, 746296, 740977, 748356, 744017, 742137, 747566,
+         ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 476568.3195842806,
+          average: 476568.4225442834,
           ips: nil,
-          std_dev: 10.235015022494002,
-          std_dev_ratio: 2.1476490572059418e-5,
+          std_dev: 11.766927129279892,
+          std_dev_ratio: 2.4690950076925196e-5,
           std_dev_ips: nil,
           median: 476568.0,
           percentiles: %{50 => 476568.0, 99 => 476568.0},
           mode: 476568,
           minimum: 476568,
           maximum: 476896,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 3079
+          relative_more: 1.0105152401743112,
+          relative_less: 0.9895941795271713,
+          absolute_difference: 4959.085448014957,
+          sample_size: 3105
         },
         samples: [476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
          476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
-         476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
-         ...]
+         476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -422,14 +520,14 @@ PartOne          1.53 K
           mode: 47073,
           minimum: 47073,
           maximum: 47073,
-          relative_more: nil,
-          relative_less: nil,
-          absolute_difference: nil,
-          sample_size: 4030
+          relative_more: 1.0114525139664805,
+          relative_less: 0.9886771610052472,
+          absolute_difference: 533.0,
+          sample_size: 4004
         },
         samples: [47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073,
          47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073,
-         47073, 47073, 47073, 47073, 47073, 47073, 47073, ...]
+         47073, 47073, 47073, 47073, 47073, 47073, ...]
       }
     },
     %Benchee.Scenario{
@@ -445,24 +543,24 @@ PartOne          1.53 K
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 22947.02691980512,
-          ips: 43578.63018572223,
-          std_dev: 3178.2168079911266,
-          std_dev_ratio: 0.13850233492549185,
-          std_dev_ips: 6035.742033577049,
-          median: 22281.0,
-          percentiles: %{50 => 22281.0, 99 => 33530.89},
-          mode: 22250,
-          minimum: 20990,
-          maximum: 692788,
+          average: 22492.24994881051,
+          ips: 44459.758462398044,
+          std_dev: 3390.1997222010223,
+          std_dev_ratio: 0.1507274607883464,
+          std_dev_ips: 6701.306500300453,
+          median: 21780.0,
+          percentiles: %{50 => 21780.0, 99 => 33760.0},
+          mode: 21620,
+          minimum: 20851,
+          maximum: 791497,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 129310
+          sample_size: 131863
         },
-        samples: [44281, 27030, 30400, 28441, 25270, 24640, 23710, 24871, 25830, 23520, 25510,
-         24621, 25300, 23510, 23360, 24301, 24780, 23300, 25111, 23850, 25010, 23540, 23441, 24110,
-         24520, 24680, 23531, 23830, 25050, 23420, 23411, 23990, ...]
+        samples: [38480, 25610, 32180, 25541, 24060, 26000, 24770, 23231, 31090, 34390, 27060,
+         22291, 27140, 23600, 24970, 23530, 23281, 23420, 27790, 23590, 23871, 26140, 23450, 24210,
+         25100, 24711, 23790, 23800, 25250, 23131, 23330, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -479,11 +577,11 @@ PartOne          1.53 K
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 59930
+          sample_size: 57979
         },
         samples: [15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592,
          15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592,
-         15592, 15592, 15592, 15592, 15592, 15592, 15592, ...]
+         15592, 15592, 15592, 15592, 15592, 15592, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
@@ -500,21 +598,90 @@ PartOne          1.53 K
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 32114
+          sample_size: 32377
         },
         samples: [1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526,
          1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526,
-         1526, 1526, ...]
+         1526, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "test_input",
+      input: "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\nGame 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\nGame 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\nGame 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\nGame 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 22607.64750049548,
+          ips: 44232.819888848826,
+          std_dev: 5402.624485541354,
+          std_dev_ratio: 0.23897331579603528,
+          std_dev_ips: 10570.463635847022,
+          median: 21960.0,
+          percentiles: %{50 => 21960.0, 99 => 33512.60000000009},
+          mode: 21840,
+          minimum: 20680,
+          maximum: 1247181,
+          relative_more: 1.005130547275066,
+          relative_less: 0.9948956408807046,
+          absolute_difference: 115.3975516849714,
+          sample_size: 131186
+        },
+        samples: [33060, 27881, 30310, 23420, 21990, 23140, 24951, 23090, 22650, 24160, 25231,
+         22540, 22230, 22340, 22650, 22711, 22140, 22690, 22330, 24850, 22041, 22570, 22410, 21570,
+         22680, 20791, 23990, 23730, 22210, 22730, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 14792.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 14792.0,
+          percentiles: %{50 => 14792.0, 99 => 14792.0},
+          mode: 14792,
+          minimum: 14792,
+          maximum: 14792,
+          relative_more: 0.9486916367367881,
+          relative_less: 1.0540832882639264,
+          absolute_difference: -800.0,
+          sample_size: 56634
+        },
+        samples: [14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792,
+         14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792, 14792,
+         14792, 14792, 14792, 14792, 14792, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1465.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1465.0,
+          percentiles: %{50 => 1465.0, 99 => 1465.0},
+          mode: 1465,
+          minimum: 1465,
+          maximum: 1465,
+          relative_more: 0.9600262123197904,
+          relative_less: 1.0416382252559726,
+          absolute_difference: -61.0,
+          sample_size: 31923
+        },
+        samples: [1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465,
+         1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465, 1465,
+         ...]
       }
     }
   ]
 }
 ```
 
-<!-- livebook:{"branch_parent_index":1} -->
-
-## Failures
-
-Sometimes my ideas don't work out.
-
-<!-- livebook:{"offset":26039,"stamp":{"token":"XCP.fwxIrcVC-momFg4ltCr7KvdwYLy8K0j2mi7Tu8qlgPlTwMIp71JiXd9X8P3Erljb29ALpW5LqBHyqro8h_PAoejeirbIEjbGDapOWzbn1f92IirLkMY","version":2}} -->
+<!-- livebook:{"offset":37193,"stamp":{"token":"XCP.pDiB_Yp5Kuo5QSwvKe-lK6SuV3moUxr5I8EhYvhaPq8BywBp_TpzQpI6SkfI5iBkbf9XN47xbRToloL6g-oa4Xgh1YHAJg6j3bD-OkApjZ2DJJ9B8Bw","version":2}} -->
