@@ -1,0 +1,520 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Advent of Code Template
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    # {:exla, "~> 0.6.0"},
+    # {:explorer, "~> 0.7"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"}
+    # {:kino_vega_lite, "~> 0.1.11"},
+    # {:nimble_parsec, "~> 1.4"},
+    # {:nx, "~> 0.6.0"}
+  ]
+  # config: [
+  #   nx: [
+  #     default_backend: EXLA.Backend,
+  #     default_defn_options: [compiler: EXLA]
+  #   ],
+  #   exla: [
+  #     default_client: :cuda,
+  #     clients: [
+  #       host: [platform: :host],
+  #       cuda: [platform: :cuda]
+  #     ]
+  #   ]
+  # ],
+  # system_env: [
+  #   XLA_TARGET: "cuda120"
+  # ]
+)
+
+# Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"2","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "2", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "Game 1: 12 red, 2 green, 5 blue; 9 red, 6 green, 4 blue; 10 red, 2 green, 5 blue; 8 blue, 9 red\nGame 2: 3 green, 7 red; 3 blue, 5 red; 2 green, 1 blue, 6 red; 3 green, 2 red, 3 blue\nGame 3: 12 red, 18 blue, 3 green; 14 red, 4 blue, 2 green; 4 green, 15 red\nGame 4: 14 blue, 8 red, 10 green; 7 green, 9 blue, 4 red; 4 green, 5 red\nGame 5: 2 red, 1 blue, 4 green; 1 blue, 1 red, 5 green; 6 green, 3 red; 10 blue, 4 green, 1 red\nGame 6: 5 red, 5 blue, 1 green; 5 blue, 15 red, 2 green; 3 green, 1 red, 9 blue\nGame 7: 9 red, 8 blue, 13 green; 9 red, 7 blue, 10 green; 7 blue, 2 red, 11 green; 4 red, 6 blue, 10 green; 3 blue, 12 green, 1 red\nGame 8: 20 red, 5 green, 10 blue; 14 red, 8 blue, 5 green; 5 green, 4 blue, 9 red; 18 red, 1 green; 2 blue, 1 green, 5 red\nGame 9: 3 blue; 3 blue, 4 green, 1 red; 8 green, 2 blue, 4 red; 5 green, 4 red\nGame 10: 18 red, 11 green, 3 blue; 2 blue, 19 red, 7 green; 4 green, 1 blue, 6 red; 4 green, 2 red, 4 blue; 10 green, 5 red, 2 blue; 13 red, 12 green, 4 blue\nGame 11: 5 green, 5 blue, 3 red; 2 red, 8 blue, 4 green; 4 blue, 4 green, 2 red; 1 blue, 3 red, 2 green; 4 blue, 4 green; 6 blue, 2 red\nGame 12: 6 blue, 1 green, 4 red; 12 blue, 4 red; 12 blue, 2 red, 6 green\nGame 13: 11 red, 17 blue, 7 green; 20 red, 12 green, 9 blue; 15 red, 15 green, 14 blue; 7 red, 6 green, 3 blue\nGame 14: 8 red, 17 green, 6 blue; 5 red, 13 blue, 7 green; 2 red, 15 green, 4 blue; 9 blue, 2 green; 7 green, 2 blue, 8 red; 10 green, 14 blue, 10 red\nGame 15: 14 red, 4 green, 4 blue; 14 red, 2 green, 16 blue; 10 blue, 2 green, 6 red\nGame 16: 2 red, 3 green; 5 green; 1 red, 1 blue; 2 red, 3 green, 1 blue; 5 red, 4 green; 5 red, 4 green\nGame 17: 4 blue, 3 green, 9 red; 3 blue, 8 red, 1 green; 1 blue, 5 green; 8 green, 2 red; 10 red, 1 green\nGame 18: 10 blue, 5 red; 1 green, 9 red, 9 blue; 5 blue, 3 red; 3 red, 1 blue; 2 blue, 9 red, 1 green; 6 red, 7 blue, 1 green\nGame 19: 9 green, 2 red, 12 blue; 3 green, 9 red, 16 blue; 2 green, 17 blue; 11 green, 3 blue, 7 red; 2 red, 10 blue, 11 green\nGame 20: 17 blue, 16 green; 13 green, 12 blue, 13 red; 6 red, 9 green, 6 blue\nGame 21: 1 green, 3 red, 1 blue; 1 blue, 2 green, 2 red; 2 green, 1 blue, 3 red\nGame 22: 7 green, 3 blue, 5 red; 2 green, 14 red, 3 blue; 2 green, 17 red; 2 blue, 15 red, 6 green; 4 green, 1 blue, 17 red\nGame 23: 4 blue, 2 red; 2 red, 7 blue, 1 green; 6 red, 5 blue, 5 green; 9 red, 4 blue; 10 blue, 8 red, 11 green\nGame 24: 1 red, 9 green, 5 blue; 14 green, 4 blue, 2 red; 5 blue, 1 red, 11 green; 3 blue, 2 red, 4 green\nGame 25: 3 green, 2 red, 1 blue; 2 blue, 10 green, 1 red; 8 red, 4 green, 1 blue; 3 blue, 15 red, 6 green; 2 blue, 13 red, 8 green; 2 red, 5 blue, 5 green\nGame 26: 5 green, 5 red; 12 green; 5 green, 3 blue, 4 red; 1 blue, 1 red, 17 green; 2 blue, 18 green\nGame 27: 1 blue, 7 green, 3 red; 3 red, 1 green, 13 blue; 4 green, 8 blue; 1 red, 3 green, 4 blue; 9 blue, 2 red\nGame 28: 9 red, 2 green, 5 blue; 5 red, 9 green; 5 blue, 1 red\nGame 29: 4 green, 10 blue, 13 red; 2 red, 5 green, 5 blue; 2 red, 9 green, 11 blue; 9 blue, 9 red, 13 green; 13 blue, 2 green, 14 red; 3 green, 8 blue, 5 red\nGame 30: 3 green, 7 red, 3 blue; 5 green, 5 blue, 12 red; 14 red, 6 green, 11 blue; 7 blue, 9 green, 11 red; 10 red, 1 blue, 4 green\nGame 31: 6 green, 5 blue, 17 red; 16 blue, 17 green, 14 red; 13 green, 13 blue, 3 red; 18 red, 8 green, 14 blue; 18 green, 1 blue; 16 red, 6 blue\nGame 32: 12 green, 2 blue; 6 blue, 5 red, 10 green; 13 green, 2 blue; 2 red, 6 blue, 6 green; 9 green, 8 red\nGame 33: 4 blue, 6 red, 2 green; 7 red, 5 blue; 3 blue, 1 red, 1 green\nGame 34: 2 red, 7 blue, 1 green; 2 blue, 1 green, 6 red; 6 red, 3 green, 7 blue; 4 green, 13 red, 1 blue; 15 blue, 1 green, 5 red\nGame 35: 8 blue, 12 red, 7 green; 2 blue, 14 red, 3 green; 14 green, 8 blue, 7 red; 15 red, 12 blue, 12 green; 11 blue, 14 red, 1 green\nGame 36: 11 red, 8 green, 2 blue; 17 red, 2 blue; 3 blue, 8 green, 19 red; 6 red, 3 blue, 3 green; 8 red, 5 green\nGame 37: 2 blue, 3 red, 12 green; 3 red, 7 green, 4 blue; 7 blue, 3 red, 8 green; 13 green, 3 red, 2 blue; 2 green\nGame 38: 2 blue, 14 red, 17 green; 1" <> ...}
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> PartOne.parse("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green")
+      [{1, 4, 2, 6}]
+
+      iex> PartOne.parse("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\nGame 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue")
+      [{1, 4, 2, 6}, {2, 1, 3, 4}]
+  """
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(&parse_line/1)
+  end
+
+  defp parse_line(<<"Game ", rest::binary>>) do
+    [game, rest] = String.split(rest, ": ", parts: 2)
+
+    rest
+    |> String.split("; ")
+    |> Stream.map(&parse_pull/1)
+    |> Enum.reduce({0, 0, 0}, fn {lr, lg, lb}, {r, g, b} ->
+      {max(lr, r), max(lg, g), max(lb, b)}
+    end)
+    |> Tuple.insert_at(0, String.to_integer(game))
+  end
+
+  defp parse_pull(pull) do
+    for count <- String.split(pull, ", "),
+        [count, color] = String.split(count, " ", parts: 2),
+        count = String.to_integer(count),
+        reduce: {0, 0, 0} do
+      {r, g, b} ->
+        case color do
+          "red" ->
+            {max(r, count), g, b}
+
+          "green" ->
+            {r, max(g, count), b}
+
+          "blue" ->
+            {r, g, max(b, count)}
+        end
+    end
+  end
+
+  def process(input) do
+    input
+    |> Stream.filter(fn {_game, red, green, blue} ->
+      red <= 12 and green <= 13 and blue <= 14
+    end)
+    |> Stream.map(&elem(&1, 0))
+    |> Enum.sum()
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 17, ...>>, {:solve, 1}}
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+2600
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+""
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+    Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+    Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+    Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+    Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+    """
+    test "sums game IDs that match criteria" do
+      assert PartOne.solve(@test_input) == 8
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+***...
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+4 doctests, 2 tests, 0 failures, 3 skipped
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 6, skipped: 3, failures: 0, excluded: 0}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1
+    # "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+    Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+    Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+    Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+    Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Operating System: Linux
+CPU Information: AMD Ryzen 9 5950X 16-Core Processor
+Number of Available Cores: 32
+Available memory: 62.71 GB
+Elixir 1.15.7
+Erlang 26.1.2
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 3 s
+memory time: 3 s
+reduction time: 3 s
+parallel: 1
+inputs: input, test_input
+Estimated total run time: 22 s
+
+Benchmarking PartOne with input input ...
+Benchmarking PartOne with input test_input ...
+
+##### With input input #####
+Name              ips        average  deviation         median         99th %
+PartOne        1.35 K      741.37 μs     ±4.32%      735.92 μs      791.23 μs
+
+Memory usage statistics:
+
+Name            average  deviation         median         99th %
+PartOne       465.40 KB     ±0.00%      465.40 KB      465.40 KB
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne         47.07 K
+
+**All measurements for reduction count were the same**
+
+##### With input test_input #####
+Name              ips        average  deviation         median         99th %
+PartOne       43.58 K       22.95 μs    ±13.85%       22.28 μs       33.53 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne        15.23 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne          1.53 K
+
+**All measurements for reduction count were the same**
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %{
+    erlang: "26.1.2",
+    os: :Linux,
+    elixir: "1.15.7",
+    available_memory: "62.71 GB",
+    cpu_speed: "AMD Ryzen 9 5950X 16-Core Processor",
+    num_cores: 32
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 3000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 3000000000.0,
+    reduction_time: 3000000000.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: [
+      {"input",
+       "Game 1: 12 red, 2 green, 5 blue; 9 red, 6 green, 4 blue; 10 red, 2 green, 5 blue; 8 blue, 9 red\nGame 2: 3 green, 7 red; 3 blue, 5 red; 2 green, 1 blue, 6 red; 3 green, 2 red, 3 blue\nGame 3: 12 red, 18 blue, 3 green; 14 red, 4 blue, 2 green; 4 green, 15 red\nGame 4: 14 blue, 8 red, 10 green; 7 green, 9 blue, 4 red; 4 green, 5 red\nGame 5: 2 red, 1 blue, 4 green; 1 blue, 1 red, 5 green; 6 green, 3 red; 10 blue, 4 green, 1 red\nGame 6: 5 red, 5 blue, 1 green; 5 blue, 15 red, 2 green; 3 green, 1 red, 9 blue\nGame 7: 9 red, 8 blue, 13 green; 9 red, 7 blue, 10 green; 7 blue, 2 red, 11 green; 4 red, 6 blue, 10 green; 3 blue, 12 green, 1 red\nGame 8: 20 red, 5 green, 10 blue; 14 red, 8 blue, 5 green; 5 green, 4 blue, 9 red; 18 red, 1 green; 2 blue, 1 green, 5 red\nGame 9: 3 blue; 3 blue, 4 green, 1 red; 8 green, 2 blue, 4 red; 5 green, 4 red\nGame 10: 18 red, 11 green, 3 blue; 2 blue, 19 red, 7 green; 4 green, 1 blue, 6 red; 4 green, 2 red, 4 blue; 10 green, 5 red, 2 blue; 13 red, 12 green, 4 blue\nGame 11: 5 green, 5 blue, 3 red; 2 red, 8 blue, 4 green; 4 blue, 4 green, 2 red; 1 blue, 3 red, 2 green; 4 blue, 4 green; 6 blue, 2 red\nGame 12: 6 blue, 1 green, 4 red; 12 blue, 4 red; 12 blue, 2 red, 6 green\nGame 13: 11 red, 17 blue, 7 green; 20 red, 12 green, 9 blue; 15 red, 15 green, 14 blue; 7 red, 6 green, 3 blue\nGame 14: 8 red, 17 green, 6 blue; 5 red, 13 blue, 7 green; 2 red, 15 green, 4 blue; 9 blue, 2 green; 7 green, 2 blue, 8 red; 10 green, 14 blue, 10 red\nGame 15: 14 red, 4 green, 4 blue; 14 red, 2 green, 16 blue; 10 blue, 2 green, 6 red\nGame 16: 2 red, 3 green; 5 green; 1 red, 1 blue; 2 red, 3 green, 1 blue; 5 red, 4 green; 5 red, 4 green\nGame 17: 4 blue, 3 green, 9 red; 3 blue, 8 red, 1 green; 1 blue, 5 green; 8 green, 2 red; 10 red, 1 green\nGame 18: 10 blue, 5 red; 1 green, 9 red, 9 blue; 5 blue, 3 red; 3 red, 1 blue; 2 blue, 9 red, 1 green; 6 red, 7 blue, 1 green\nGame 19: 9 green, 2 red, 12 blue; 3 green, 9 red, 16 blue; 2 green, 17 blue; 11 green, 3 blue, 7 red; 2 red, 10 blue, 11 green\nGame 20: 17 blue, 16 green; 13 green, 12 blue, 13 red; 6 red, 9 green, 6 blue\nGame 21: 1 green, 3 red, 1 blue; 1 blue, 2 green, 2 red; 2 green, 1 blue, 3 red\nGame 22: 7 green, 3 blue, 5 red; 2 green, 14 red, 3 blue; 2 green, 17 red; 2 blue, 15 red, 6 green; 4 green, 1 blue, 17 red\nGame 23: 4 blue, 2 red; 2 red, 7 blue, 1 green; 6 red, 5 blue, 5 green; 9 red, 4 blue; 10 blue, 8 red, 11 green\nGame 24: 1 red, 9 green, 5 blue; 14 green, 4 blue, 2 red; 5 blue, 1 red, 11 green; 3 blue, 2 red, 4 green\nGame 25: 3 green, 2 red, 1 blue; 2 blue, 10 green, 1 red; 8 red, 4 green, 1 blue; 3 blue, 15 red, 6 green; 2 blue, 13 red, 8 green; 2 red, 5 blue, 5 green\nGame 26: 5 green, 5 red; 12 green; 5 green, 3 blue, 4 red; 1 blue, 1 red, 17 green; 2 blue, 18 green\nGame 27: 1 blue, 7 green, 3 red; 3 red, 1 green, 13 blue; 4 green, 8 blue; 1 red, 3 green, 4 blue; 9 blue, 2 red\nGame 28: 9 red, 2 green, 5 blue; 5 red, 9 green; 5 blue, 1 red\nGame 29: 4 green, 10 blue, 13 red; 2 red, 5 green, 5 blue; 2 red, 9 green, 11 blue; 9 blue, 9 red, 13 green; 13 blue, 2 green, 14 red; 3 green, 8 blue, 5 red\nGame 30: 3 green, 7 red, 3 blue; 5 green, 5 blue, 12 red; 14 red, 6 green, 11 blue; 7 blue, 9 green, 11 red; 10 red, 1 blue, 4 green\nGame 31: 6 green, 5 blue, 17 red; 16 blue, 17 green, 14 red; 13 green, 13 blue, 3 red; 18 red, 8 green, 14 blue; 18 green, 1 blue; 16 red, 6 blue\nGame 32: 12 green, 2 blue; 6 blue, 5 red, 10 green; 13 green, 2 blue; 2 red, 6 blue, 6 green; 9 green, 8 red\nGame 33: 4 blue, 6 red, 2 green; 7 red, 5 blue; 3 blue, 1 red, 1 green\nGame 34: 2 red, 7 blue, 1 green; 2 blue, 1 green, 6 red; 6 red, 3 green, 7 blue; 4 green, 13 red, 1 blue; 15 blue, 1 green, 5 red\nGame 35: 8 blue, 12 red, 7 green; 2 blue, 14 red, 3 green; 14 green, 8 blue, 7 red; 15 red, 12 blue, 12 green; 11 blue, 14 red, 1 green\nGame 36: 11 red, 8 green, 2 blue; 17 red, 2 blue; 3 blue, 8 green, 19 red; 6 red, 3 blue, 3 green; 8 red, 5 green\nGame 37: 2 blue, 3 red, 12 green; 3 red, 7 green, 4 blue; 7 blue, 3 red, 8 green; 13 green, 3 red, 2 blue; 2 green\nGame 38: 2 blue, 14 red, 17 green; 1" <> ...},
+      {"test_input",
+       "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\nGame 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\nGame 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\nGame 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\nGame 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n"}
+    ],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "input",
+      input: "Game 1: 12 red, 2 green, 5 blue; 9 red, 6 green, 4 blue; 10 red, 2 green, 5 blue; 8 blue, 9 red\nGame 2: 3 green, 7 red; 3 blue, 5 red; 2 green, 1 blue, 6 red; 3 green, 2 red, 3 blue\nGame 3: 12 red, 18 blue, 3 green; 14 red, 4 blue, 2 green; 4 green, 15 red\nGame 4: 14 blue, 8 red, 10 green; 7 green, 9 blue, 4 red; 4 green, 5 red\nGame 5: 2 red, 1 blue, 4 green; 1 blue, 1 red, 5 green; 6 green, 3 red; 10 blue, 4 green, 1 red\nGame 6: 5 red, 5 blue, 1 green; 5 blue, 15 red, 2 green; 3 green, 1 red, 9 blue\nGame 7: 9 red, 8 blue, 13 green; 9 red, 7 blue, 10 green; 7 blue, 2 red, 11 green; 4 red, 6 blue, 10 green; 3 blue, 12 green, 1 red\nGame 8: 20 red, 5 green, 10 blue; 14 red, 8 blue, 5 green; 5 green, 4 blue, 9 red; 18 red, 1 green; 2 blue, 1 green, 5 red\nGame 9: 3 blue; 3 blue, 4 green, 1 red; 8 green, 2 blue, 4 red; 5 green, 4 red\nGame 10: 18 red, 11 green, 3 blue; 2 blue, 19 red, 7 green; 4 green, 1 blue, 6 red; 4 green, 2 red, 4 blue; 10 green, 5 red, 2 blue; 13 red, 12 green, 4 blue\nGame 11: 5 green, 5 blue, 3 red; 2 red, 8 blue, 4 green; 4 blue, 4 green, 2 red; 1 blue, 3 red, 2 green; 4 blue, 4 green; 6 blue, 2 red\nGame 12: 6 blue, 1 green, 4 red; 12 blue, 4 red; 12 blue, 2 red, 6 green\nGame 13: 11 red, 17 blue, 7 green; 20 red, 12 green, 9 blue; 15 red, 15 green, 14 blue; 7 red, 6 green, 3 blue\nGame 14: 8 red, 17 green, 6 blue; 5 red, 13 blue, 7 green; 2 red, 15 green, 4 blue; 9 blue, 2 green; 7 green, 2 blue, 8 red; 10 green, 14 blue, 10 red\nGame 15: 14 red, 4 green, 4 blue; 14 red, 2 green, 16 blue; 10 blue, 2 green, 6 red\nGame 16: 2 red, 3 green; 5 green; 1 red, 1 blue; 2 red, 3 green, 1 blue; 5 red, 4 green; 5 red, 4 green\nGame 17: 4 blue, 3 green, 9 red; 3 blue, 8 red, 1 green; 1 blue, 5 green; 8 green, 2 red; 10 red, 1 green\nGame 18: 10 blue, 5 red; 1 green, 9 red, 9 blue; 5 blue, 3 red; 3 red, 1 blue; 2 blue, 9 red, 1 green; 6 red, 7 blue, 1 green\nGame 19: 9 green, 2 red, 12 blue; 3 green, 9 red, 16 blue; 2 green, 17 blue; 11 green, 3 blue, 7 red; 2 red, 10 blue, 11 green\nGame 20: 17 blue, 16 green; 13 green, 12 blue, 13 red; 6 red, 9 green, 6 blue\nGame 21: 1 green, 3 red, 1 blue; 1 blue, 2 green, 2 red; 2 green, 1 blue, 3 red\nGame 22: 7 green, 3 blue, 5 red; 2 green, 14 red, 3 blue; 2 green, 17 red; 2 blue, 15 red, 6 green; 4 green, 1 blue, 17 red\nGame 23: 4 blue, 2 red; 2 red, 7 blue, 1 green; 6 red, 5 blue, 5 green; 9 red, 4 blue; 10 blue, 8 red, 11 green\nGame 24: 1 red, 9 green, 5 blue; 14 green, 4 blue, 2 red; 5 blue, 1 red, 11 green; 3 blue, 2 red, 4 green\nGame 25: 3 green, 2 red, 1 blue; 2 blue, 10 green, 1 red; 8 red, 4 green, 1 blue; 3 blue, 15 red, 6 green; 2 blue, 13 red, 8 green; 2 red, 5 blue, 5 green\nGame 26: 5 green, 5 red; 12 green; 5 green, 3 blue, 4 red; 1 blue, 1 red, 17 green; 2 blue, 18 green\nGame 27: 1 blue, 7 green, 3 red; 3 red, 1 green, 13 blue; 4 green, 8 blue; 1 red, 3 green, 4 blue; 9 blue, 2 red\nGame 28: 9 red, 2 green, 5 blue; 5 red, 9 green; 5 blue, 1 red\nGame 29: 4 green, 10 blue, 13 red; 2 red, 5 green, 5 blue; 2 red, 9 green, 11 blue; 9 blue, 9 red, 13 green; 13 blue, 2 green, 14 red; 3 green, 8 blue, 5 red\nGame 30: 3 green, 7 red, 3 blue; 5 green, 5 blue, 12 red; 14 red, 6 green, 11 blue; 7 blue, 9 green, 11 red; 10 red, 1 blue, 4 green\nGame 31: 6 green, 5 blue, 17 red; 16 blue, 17 green, 14 red; 13 green, 13 blue, 3 red; 18 red, 8 green, 14 blue; 18 green, 1 blue; 16 red, 6 blue\nGame 32: 12 green, 2 blue; 6 blue, 5 red, 10 green; 13 green, 2 blue; 2 red, 6 blue, 6 green; 9 green, 8 red\nGame 33: 4 blue, 6 red, 2 green; 7 red, 5 blue; 3 blue, 1 red, 1 green\nGame 34: 2 red, 7 blue, 1 green; 2 blue, 1 green, 6 red; 6 red, 3 green, 7 blue; 4 green, 13 red, 1 blue; 15 blue, 1 green, 5 red\nGame 35: 8 blue, 12 red, 7 green; 2 blue, 14 red, 3 green; 14 green, 8 blue, 7 red; 15 red, 12 blue, 12 green; 11 blue, 14 red, 1 green\nGame 36: 11 red, 8 green, 2 blue; 17 red, 2 blue; 3 blue, 8 green, 19 red; 6 red, 3 blue, 3 green; 8 red, 5 green\nGame 37: 2 blue, 3 red, 12 green; 3 red, 7 green, 4 blue; 7 blue, 3 red, 8 green; 13 green, 3 red, 2 blue; 2 green\nGame 38: 2 blue, 14 red, 17 green; 1" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 741373.8009888751,
+          ips: 1348.8472328886703,
+          std_dev: 32049.77514814555,
+          std_dev_ratio: 0.0432302505232802,
+          std_dev_ips: 58.31100379541049,
+          median: 735918.0,
+          percentiles: %{50 => 735918.0, 99 => 791234.4},
+          mode: [733588, 731428, 733208, 734968, 737488, 737468, 733548],
+          minimum: 719527,
+          maximum: 1444666,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 4045
+        },
+        samples: [803328, 759968, 736649, 734208, 733307, 722338, 732758, 784189, 749108, 742488,
+         754208, 749708, 746228, 746918, 748318, 786739, 752078, 742228, 749918, 747428, 748408,
+         743968, 793509, 745638, 742768, 753148, 746238, 749638, 754518, 746848, 782579, 758958,
+         744778, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 476568.3195842806,
+          ips: nil,
+          std_dev: 10.235015022494002,
+          std_dev_ratio: 2.1476490572059418e-5,
+          std_dev_ips: nil,
+          median: 476568.0,
+          percentiles: %{50 => 476568.0, 99 => 476568.0},
+          mode: 476568,
+          minimum: 476568,
+          maximum: 476896,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 3079
+        },
+        samples: [476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
+         476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
+         476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568, 476568,
+         ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 47073.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 47073.0,
+          percentiles: %{50 => 47073.0, 99 => 47073.0},
+          mode: 47073,
+          minimum: 47073,
+          maximum: 47073,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 4030
+        },
+        samples: [47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073,
+         47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073, 47073,
+         47073, 47073, 47073, 47073, 47073, 47073, 47073, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\nGame 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\nGame 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\nGame 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\nGame 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 22947.02691980512,
+          ips: 43578.63018572223,
+          std_dev: 3178.2168079911266,
+          std_dev_ratio: 0.13850233492549185,
+          std_dev_ips: 6035.742033577049,
+          median: 22281.0,
+          percentiles: %{50 => 22281.0, 99 => 33530.89},
+          mode: 22250,
+          minimum: 20990,
+          maximum: 692788,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 129310
+        },
+        samples: [44281, 27030, 30400, 28441, 25270, 24640, 23710, 24871, 25830, 23520, 25510,
+         24621, 25300, 23510, 23360, 24301, 24780, 23300, 25111, 23850, 25010, 23540, 23441, 24110,
+         24520, 24680, 23531, 23830, 25050, 23420, 23411, 23990, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 15592.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 15592.0,
+          percentiles: %{50 => 15592.0, 99 => 15592.0},
+          mode: 15592,
+          minimum: 15592,
+          maximum: 15592,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 59930
+        },
+        samples: [15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592,
+         15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592, 15592,
+         15592, 15592, 15592, 15592, 15592, 15592, 15592, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1526.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1526.0,
+          percentiles: %{50 => 1526.0, 99 => 1526.0},
+          mode: 1526,
+          minimum: 1526,
+          maximum: 1526,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 32114
+        },
+        samples: [1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526,
+         1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526, 1526,
+         1526, 1526, ...]
+      }
+    }
+  ]
+}
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":26039,"stamp":{"token":"XCP.fwxIrcVC-momFg4ltCr7KvdwYLy8K0j2mi7Tu8qlgPlTwMIp71JiXd9X8P3Erljb29ALpW5LqBHyqro8h_PAoejeirbIEjbGDapOWzbn1f92IirLkMY","version":2}} -->
