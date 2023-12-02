@@ -37,3 +37,8 @@ fn part1(input: &[(u32, u32, u32)]) -> usize {
         .map(|el| el.0 + 1)
         .sum()
 }
+
+#[aoc(day2, part2)]
+fn part2(input: &[(u32, u32, u32)]) -> u32 {
+    input.iter().map(|&(r, g, b)| r * g * b).sum()
+}
