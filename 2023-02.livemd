@@ -1,6 +1,6 @@
 <!-- livebook:{"persist_outputs":true} -->
 
-# Advent of Code Template
+# 2023-02
 
 ```elixir
 Mix.install(
