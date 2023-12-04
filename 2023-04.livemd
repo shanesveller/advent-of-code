@@ -1,0 +1,509 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# 2023-04
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    # {:exla, "~> 0.6.0"},
+    # {:explorer, "~> 0.7"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"}
+    # {:kino_vega_lite, "~> 0.1.11"},
+    # {:nimble_parsec, "~> 1.4"},
+    # {:nx, "~> 0.6.0"}
+  ]
+  # config: [
+  #   nx: [
+  #     default_backend: EXLA.Backend,
+  #     default_defn_options: [compiler: EXLA]
+  #   ],
+  #   exla: [
+  #     default_client: :cuda,
+  #     clients: [
+  #       host: [platform: :host],
+  #       cuda: [platform: :cuda]
+  #     ]
+  #   ]
+  # ],
+  # system_env: [
+  #   XLA_TARGET: "cuda120"
+  # ]
+)
+
+# Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"4","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "4", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "Card   1: 13  5 40 15 21 61 74 55 32 56 | 21 57 74 56  7 84 37 47 75 66 68  8 55 22 53 61 40 13 15 41 32 46 95 65  5\nCard   2: 92 97 39 23 25 40 33 70 55 77 | 25 70 23 91 45 60 34 56 82  6  9 62 24  3 67 99 18 58  1 26 50 37 32 14 85\nCard   3: 44 71 17 92 34 98 50 61 89 79 | 57 56 89 98 59 61 44 97 79 18 71 50 34 92 23 63 20 51 64 47 76 17 46 54 62\nCard   4: 87 70 44 19  3 54 81 15 72 46 | 75 70 74 84  1 61 85 14 79 66 26 93 39 73 67 21 91 12  3 86 41 42  6 27 49\nCard   5: 86 63 59 76 89 62 87 20  2 66 | 21 58 72 98 95 14 38 16 35 88 60 55  3 36 65  1 28 56 11 74 15 29 93 50 17\nCard   6: 24 92 61 55 50 51 78  2 60 91 | 55 91 51 56 45 67 13 36 66  8 99 62 78  2 92 49 44 69 42 65 50 34 35 82 60\nCard   7: 91 88 72 26 86 34 14 66 31 20 | 25 24 73 97 72 20 87 26 15 47 90 22 14 86 62 68 61 69 88 91 66 27 31 34 52\nCard   8: 40 66 64 42 52  5 18 49 67 94 | 23  5 66 53 33 24 95 86  2 46 67 87 68 71 83 21 78 41 29 62 70 69 61 60 93\nCard   9: 41 86 83  7 80  3 98 95 94 28 | 78 62 21 65 53  6 75 90 39 70 98 59 37 61 49 43 52 34 23 15 83 48 54 80 93\nCard  10: 50 21 55 47 37  4 29 96 80 54 | 79 68 69 55 51 58 37 95 35 73 70 21 64 87 94 89 53 47 62 29  6 41 24  9 54\nCard  11: 64 12 41 90 30 21 54 40  4 86 |  4 57 10 84 88 30 59 70  5 64 18 65 67 92 12 90 56 39 44 75 86 28  9 54 38\nCard  12: 18 17 83 38 62 89  5 35  6 99 |  6 22 19 44 34 36 57 97 46 28 86 89 60  8 26 74 98 38 39 95 96  1 67 35 17\nCard  13: 86 94 93 19 49 11  8 48 81 39 | 74 54 51 62 79 87 18 69 88 75 22 19 46 36 12 26 11 48 80 45 14 92  1 17 33\nCard  14: 92 83 90 42 44 88 77 24 29 46 | 88 93 12  4 74 31 38 34 59 40 18 97 20  2 95 53 23 32 92 68 56 87 71 69 54\nCard  15: 92 68 17 36 99 15 35 67 60 55 |  1 34 38 55 18 49 52 37 27 66 54 59 71 90 69 80 11 10 97 33 24 95 50 36 93\nCard  16:  6  8 62 88 47 96 46 35 78 33 | 13 72 75 84 45 82 95 59 42 55 29 20 70 52 16  4 80 71 94 85 12 61 50 18 81\nCard  17: 35 51 98 72 99 13 45 92 30 67 | 32 75 71  7 91 37 62 35 70 97 80 89 78 47 41 21 12 42  5 52 83 39 29 27 56\nCard  18:  3 10 38 62 66 33 53 14 34 41 | 47 72 60 57 55 37 48 44  7 43 94 75 91 84 77 74 46  1 28 68 26 27 23 80 71\nCard  19: 98 46 62 91 93 61 65 66 20 43 | 11 62 38 93 81 47 43 65 53 59 69  7 57 10 18 61 15 46 20 44 66 86 91 98 30\nCard  20: 56  1 31 96 46  3 25 40 33 59 | 58 82 66 56 75 49 19  1 25 93 46 87 29 18 40 96 48 86  3 33 91 31 24 59 14\nCard  21: 93 43 29 76 85 88 81 58 13 89 | 81 39 93 41 82 20 70 13  3 12 58 43 26 69 89 49 29 85 30 75 96 97 74 76 16\nCard  22: 99 16 89  6 57 37 95 93 87 33 | 78 22 69 84 60 93 33 57 31 38 92 99 46  6 50 16 95 47 89 25 87 83 67 37 39\nCard  23: 96 64 85 18 82 33 29 17 24 99 | 76 99 53 17 78 38 82 96 18 85  1 73 36 24 11 47 40 64 89 98 20  9 23 84 57\nCard  24: 73 21 29 44 15 91 95 12  6 55 | 63 56 34 55 59 62 94 29 89 95 21 28 91 78 83 12  6  2 84 46 73 81 15 44 20\nCard  25: 15 92 59 63 87 68 61 26 98 97 |  4 59 46 83 68 10 32 15 58 85 78 22 98 77 92 56 42 36 61  7 87 17 26 97 63\nCard  26: 87 71 84 55 92  9 26 10 24 25 | 65  1 34 35 50 59  2 23  6 63 56  5 98 45  7 41 58 93 54 27 44 82 46 47 21\nCard  27: 62 49 39 32 15 77 78 50 34 65 | 78 76 20 60 65 56 82 22 39 99 72 35 33 77 49  1 50 42 62 26 16 23 75 43 95\nCard  28: 30 70 26 71 78 57 14 91 66 25 | 61 36  4 46 81 41 99 14 76 78 71 26  2 66  9 48 91 11 30 70 57 42 25 62 87\nCard  29: 14  6 35  9 21 68 50 63 76 59 |  3 43 58 33 93  1 90 21 78 47 99 16 67 80 84 71 97 38 10 83 70 34 44 46 57\nCard  30: 35 11 67 65 88 86 98 76 79 34 | 37 86 44 99 96 76 14 32 65 47 88 67 12 35 34 39 84 90 49 98 66 79 30 11 82\nCard  31: 71 25  9 26 24 23 66 47 40 67 | 65 28  1  2 81 15 38 40 79 13  8 61 97 87 18  4 98 45 42 72 96 92 30 34 73\nCard  32: 90 93 43  8 31 85 26 32 58 39 | 67 10  6 81 97  4 92 34 73 68 53 51 30 65 23 18 36 71 79 70 96 25 13 43 87\nCard  33: 43 89 29 67 13 18 55  2 79 97 | 43 79 28 67 93 55 18  2 21 94 92 99 51  9 31 70  5 68 84 97 29 74 87 53 26\nCard  34: 48 50  5 28 59 82 33 69  7 49 | 55 67 93 39 24 59 48 64 74 76 85  7 14 28 25  2 34 19 69 80  5 68 38 53 50\nCard  35:  8 86 26 41  2 63  7 70 42 56 | 59 87 33 12 86 26 99 29 31  5 97 19 62 47 73 22 42 15 40 32 83  9 88 70 78\nC" <> ...}
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> PartOne.parse("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53")
+      [{MapSet.new([6, 9, 17, 31, 48, 53, 83, 86]), MapSet.new([17, 41, 48, 83, 86])}]
+  """
+  def parse(input) do
+    input
+    |> String.splitter(["\n"], trim: true)
+    |> Enum.map(&parse_line/1)
+  end
+
+  def process(input) do
+    Enum.reduce(input, 0, fn {winning, drawn}, total ->
+      matches = winning |> MapSet.intersection(drawn) |> MapSet.size()
+
+      if matches > 0 do
+        total + Integer.pow(2, matches - 1)
+      else
+        total
+      end
+    end)
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+
+  @line_rx ~r/^Card *(?<card>\d+): (?<winning>[\d ]+) \| *(?<draws>[\d ]+)/
+  def parse_line(line) do
+    %{"draws" => d, "winning" => w} = Regex.named_captures(@line_rx, line)
+    {num_list_to_set(d), num_list_to_set(w)}
+  end
+
+  defp num_list_to_set(s) do
+    s |> String.split() |> MapSet.new(&String.to_integer/1)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 15, ...>>, {:num_list_to_set, 1}}
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+25010
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+""
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+    Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+    Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+    Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+    Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+    Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+    """
+    test "scores by winning numbers" do
+      assert PartOne.solve(@test_input) == 13
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+**..
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+2 doctests, 2 tests, 0 failures, 2 skipped
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 4, skipped: 2, failures: 0, excluded: 0}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1
+    # "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+    Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+    Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+    Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+    Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+    Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Operating System: Linux
+CPU Information: AMD Ryzen 9 5950X 16-Core Processor
+Number of Available Cores: 32
+Available memory: 62.71 GB
+Elixir 1.15.7
+Erlang 26.1.2
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 3 s
+memory time: 3 s
+reduction time: 3 s
+parallel: 1
+inputs: input, test_input
+Estimated total run time: 22 s
+
+Benchmarking PartOne with input input ...
+Benchmarking PartOne with input test_input ...
+
+##### With input input #####
+Name              ips        average  deviation         median         99th %
+PartOne        416.30        2.40 ms    ±16.12%        2.30 ms        4.41 ms
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne       895.52 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne         76.06 K
+
+**All measurements for reduction count were the same**
+
+##### With input test_input #####
+Name              ips        average  deviation         median         99th %
+PartOne       18.01 K       55.52 μs     ±9.39%       54.52 μs       82.28 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne        14.04 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne          1.24 K
+
+**All measurements for reduction count were the same**
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %{
+    erlang: "26.1.2",
+    os: :Linux,
+    elixir: "1.15.7",
+    available_memory: "62.71 GB",
+    cpu_speed: "AMD Ryzen 9 5950X 16-Core Processor",
+    num_cores: 32
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 3000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 3000000000.0,
+    reduction_time: 3000000000.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: [
+      {"input",
+       "Card   1: 13  5 40 15 21 61 74 55 32 56 | 21 57 74 56  7 84 37 47 75 66 68  8 55 22 53 61 40 13 15 41 32 46 95 65  5\nCard   2: 92 97 39 23 25 40 33 70 55 77 | 25 70 23 91 45 60 34 56 82  6  9 62 24  3 67 99 18 58  1 26 50 37 32 14 85\nCard   3: 44 71 17 92 34 98 50 61 89 79 | 57 56 89 98 59 61 44 97 79 18 71 50 34 92 23 63 20 51 64 47 76 17 46 54 62\nCard   4: 87 70 44 19  3 54 81 15 72 46 | 75 70 74 84  1 61 85 14 79 66 26 93 39 73 67 21 91 12  3 86 41 42  6 27 49\nCard   5: 86 63 59 76 89 62 87 20  2 66 | 21 58 72 98 95 14 38 16 35 88 60 55  3 36 65  1 28 56 11 74 15 29 93 50 17\nCard   6: 24 92 61 55 50 51 78  2 60 91 | 55 91 51 56 45 67 13 36 66  8 99 62 78  2 92 49 44 69 42 65 50 34 35 82 60\nCard   7: 91 88 72 26 86 34 14 66 31 20 | 25 24 73 97 72 20 87 26 15 47 90 22 14 86 62 68 61 69 88 91 66 27 31 34 52\nCard   8: 40 66 64 42 52  5 18 49 67 94 | 23  5 66 53 33 24 95 86  2 46 67 87 68 71 83 21 78 41 29 62 70 69 61 60 93\nCard   9: 41 86 83  7 80  3 98 95 94 28 | 78 62 21 65 53  6 75 90 39 70 98 59 37 61 49 43 52 34 23 15 83 48 54 80 93\nCard  10: 50 21 55 47 37  4 29 96 80 54 | 79 68 69 55 51 58 37 95 35 73 70 21 64 87 94 89 53 47 62 29  6 41 24  9 54\nCard  11: 64 12 41 90 30 21 54 40  4 86 |  4 57 10 84 88 30 59 70  5 64 18 65 67 92 12 90 56 39 44 75 86 28  9 54 38\nCard  12: 18 17 83 38 62 89  5 35  6 99 |  6 22 19 44 34 36 57 97 46 28 86 89 60  8 26 74 98 38 39 95 96  1 67 35 17\nCard  13: 86 94 93 19 49 11  8 48 81 39 | 74 54 51 62 79 87 18 69 88 75 22 19 46 36 12 26 11 48 80 45 14 92  1 17 33\nCard  14: 92 83 90 42 44 88 77 24 29 46 | 88 93 12  4 74 31 38 34 59 40 18 97 20  2 95 53 23 32 92 68 56 87 71 69 54\nCard  15: 92 68 17 36 99 15 35 67 60 55 |  1 34 38 55 18 49 52 37 27 66 54 59 71 90 69 80 11 10 97 33 24 95 50 36 93\nCard  16:  6  8 62 88 47 96 46 35 78 33 | 13 72 75 84 45 82 95 59 42 55 29 20 70 52 16  4 80 71 94 85 12 61 50 18 81\nCard  17: 35 51 98 72 99 13 45 92 30 67 | 32 75 71  7 91 37 62 35 70 97 80 89 78 47 41 21 12 42  5 52 83 39 29 27 56\nCard  18:  3 10 38 62 66 33 53 14 34 41 | 47 72 60 57 55 37 48 44  7 43 94 75 91 84 77 74 46  1 28 68 26 27 23 80 71\nCard  19: 98 46 62 91 93 61 65 66 20 43 | 11 62 38 93 81 47 43 65 53 59 69  7 57 10 18 61 15 46 20 44 66 86 91 98 30\nCard  20: 56  1 31 96 46  3 25 40 33 59 | 58 82 66 56 75 49 19  1 25 93 46 87 29 18 40 96 48 86  3 33 91 31 24 59 14\nCard  21: 93 43 29 76 85 88 81 58 13 89 | 81 39 93 41 82 20 70 13  3 12 58 43 26 69 89 49 29 85 30 75 96 97 74 76 16\nCard  22: 99 16 89  6 57 37 95 93 87 33 | 78 22 69 84 60 93 33 57 31 38 92 99 46  6 50 16 95 47 89 25 87 83 67 37 39\nCard  23: 96 64 85 18 82 33 29 17 24 99 | 76 99 53 17 78 38 82 96 18 85  1 73 36 24 11 47 40 64 89 98 20  9 23 84 57\nCard  24: 73 21 29 44 15 91 95 12  6 55 | 63 56 34 55 59 62 94 29 89 95 21 28 91 78 83 12  6  2 84 46 73 81 15 44 20\nCard  25: 15 92 59 63 87 68 61 26 98 97 |  4 59 46 83 68 10 32 15 58 85 78 22 98 77 92 56 42 36 61  7 87 17 26 97 63\nCard  26: 87 71 84 55 92  9 26 10 24 25 | 65  1 34 35 50 59  2 23  6 63 56  5 98 45  7 41 58 93 54 27 44 82 46 47 21\nCard  27: 62 49 39 32 15 77 78 50 34 65 | 78 76 20 60 65 56 82 22 39 99 72 35 33 77 49  1 50 42 62 26 16 23 75 43 95\nCard  28: 30 70 26 71 78 57 14 91 66 25 | 61 36  4 46 81 41 99 14 76 78 71 26  2 66  9 48 91 11 30 70 57 42 25 62 87\nCard  29: 14  6 35  9 21 68 50 63 76 59 |  3 43 58 33 93  1 90 21 78 47 99 16 67 80 84 71 97 38 10 83 70 34 44 46 57\nCard  30: 35 11 67 65 88 86 98 76 79 34 | 37 86 44 99 96 76 14 32 65 47 88 67 12 35 34 39 84 90 49 98 66 79 30 11 82\nCard  31: 71 25  9 26 24 23 66 47 40 67 | 65 28  1  2 81 15 38 40 79 13  8 61 97 87 18  4 98 45 42 72 96 92 30 34 73\nCard  32: 90 93 43  8 31 85 26 32 58 39 | 67 10  6 81 97  4 92 34 73 68 53 51 30 65 23 18 36 71 79 70 96 25 13 43 87\nCard  33: 43 89 29 67 13 18 55  2 79 97 | 43 79 28 67 93 55 18  2 21 94 92 99 51  9 31 70  5 68 84 97 29 74 87 53 26\nCard  34: 48 50  5 28 59 82 33 69  7 49 | 55 67 93 39 24 59 48 64 74 76 85  7 14 28 25  2 34 19 69 80  5 68 38 53 50\nCard  35:  8 86 26 41  2 63  7 70 42 56 | 59 87 33 12 86 26 99 29 31  5 97 19 62 47 73 22 42 15 40 32 83  9 88 70 78\nC" <> ...},
+      {"test_input",
+       "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\nCard 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\nCard 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1\nCard 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83\nCard 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\nCard 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n"}
+    ],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "input",
+      input: "Card   1: 13  5 40 15 21 61 74 55 32 56 | 21 57 74 56  7 84 37 47 75 66 68  8 55 22 53 61 40 13 15 41 32 46 95 65  5\nCard   2: 92 97 39 23 25 40 33 70 55 77 | 25 70 23 91 45 60 34 56 82  6  9 62 24  3 67 99 18 58  1 26 50 37 32 14 85\nCard   3: 44 71 17 92 34 98 50 61 89 79 | 57 56 89 98 59 61 44 97 79 18 71 50 34 92 23 63 20 51 64 47 76 17 46 54 62\nCard   4: 87 70 44 19  3 54 81 15 72 46 | 75 70 74 84  1 61 85 14 79 66 26 93 39 73 67 21 91 12  3 86 41 42  6 27 49\nCard   5: 86 63 59 76 89 62 87 20  2 66 | 21 58 72 98 95 14 38 16 35 88 60 55  3 36 65  1 28 56 11 74 15 29 93 50 17\nCard   6: 24 92 61 55 50 51 78  2 60 91 | 55 91 51 56 45 67 13 36 66  8 99 62 78  2 92 49 44 69 42 65 50 34 35 82 60\nCard   7: 91 88 72 26 86 34 14 66 31 20 | 25 24 73 97 72 20 87 26 15 47 90 22 14 86 62 68 61 69 88 91 66 27 31 34 52\nCard   8: 40 66 64 42 52  5 18 49 67 94 | 23  5 66 53 33 24 95 86  2 46 67 87 68 71 83 21 78 41 29 62 70 69 61 60 93\nCard   9: 41 86 83  7 80  3 98 95 94 28 | 78 62 21 65 53  6 75 90 39 70 98 59 37 61 49 43 52 34 23 15 83 48 54 80 93\nCard  10: 50 21 55 47 37  4 29 96 80 54 | 79 68 69 55 51 58 37 95 35 73 70 21 64 87 94 89 53 47 62 29  6 41 24  9 54\nCard  11: 64 12 41 90 30 21 54 40  4 86 |  4 57 10 84 88 30 59 70  5 64 18 65 67 92 12 90 56 39 44 75 86 28  9 54 38\nCard  12: 18 17 83 38 62 89  5 35  6 99 |  6 22 19 44 34 36 57 97 46 28 86 89 60  8 26 74 98 38 39 95 96  1 67 35 17\nCard  13: 86 94 93 19 49 11  8 48 81 39 | 74 54 51 62 79 87 18 69 88 75 22 19 46 36 12 26 11 48 80 45 14 92  1 17 33\nCard  14: 92 83 90 42 44 88 77 24 29 46 | 88 93 12  4 74 31 38 34 59 40 18 97 20  2 95 53 23 32 92 68 56 87 71 69 54\nCard  15: 92 68 17 36 99 15 35 67 60 55 |  1 34 38 55 18 49 52 37 27 66 54 59 71 90 69 80 11 10 97 33 24 95 50 36 93\nCard  16:  6  8 62 88 47 96 46 35 78 33 | 13 72 75 84 45 82 95 59 42 55 29 20 70 52 16  4 80 71 94 85 12 61 50 18 81\nCard  17: 35 51 98 72 99 13 45 92 30 67 | 32 75 71  7 91 37 62 35 70 97 80 89 78 47 41 21 12 42  5 52 83 39 29 27 56\nCard  18:  3 10 38 62 66 33 53 14 34 41 | 47 72 60 57 55 37 48 44  7 43 94 75 91 84 77 74 46  1 28 68 26 27 23 80 71\nCard  19: 98 46 62 91 93 61 65 66 20 43 | 11 62 38 93 81 47 43 65 53 59 69  7 57 10 18 61 15 46 20 44 66 86 91 98 30\nCard  20: 56  1 31 96 46  3 25 40 33 59 | 58 82 66 56 75 49 19  1 25 93 46 87 29 18 40 96 48 86  3 33 91 31 24 59 14\nCard  21: 93 43 29 76 85 88 81 58 13 89 | 81 39 93 41 82 20 70 13  3 12 58 43 26 69 89 49 29 85 30 75 96 97 74 76 16\nCard  22: 99 16 89  6 57 37 95 93 87 33 | 78 22 69 84 60 93 33 57 31 38 92 99 46  6 50 16 95 47 89 25 87 83 67 37 39\nCard  23: 96 64 85 18 82 33 29 17 24 99 | 76 99 53 17 78 38 82 96 18 85  1 73 36 24 11 47 40 64 89 98 20  9 23 84 57\nCard  24: 73 21 29 44 15 91 95 12  6 55 | 63 56 34 55 59 62 94 29 89 95 21 28 91 78 83 12  6  2 84 46 73 81 15 44 20\nCard  25: 15 92 59 63 87 68 61 26 98 97 |  4 59 46 83 68 10 32 15 58 85 78 22 98 77 92 56 42 36 61  7 87 17 26 97 63\nCard  26: 87 71 84 55 92  9 26 10 24 25 | 65  1 34 35 50 59  2 23  6 63 56  5 98 45  7 41 58 93 54 27 44 82 46 47 21\nCard  27: 62 49 39 32 15 77 78 50 34 65 | 78 76 20 60 65 56 82 22 39 99 72 35 33 77 49  1 50 42 62 26 16 23 75 43 95\nCard  28: 30 70 26 71 78 57 14 91 66 25 | 61 36  4 46 81 41 99 14 76 78 71 26  2 66  9 48 91 11 30 70 57 42 25 62 87\nCard  29: 14  6 35  9 21 68 50 63 76 59 |  3 43 58 33 93  1 90 21 78 47 99 16 67 80 84 71 97 38 10 83 70 34 44 46 57\nCard  30: 35 11 67 65 88 86 98 76 79 34 | 37 86 44 99 96 76 14 32 65 47 88 67 12 35 34 39 84 90 49 98 66 79 30 11 82\nCard  31: 71 25  9 26 24 23 66 47 40 67 | 65 28  1  2 81 15 38 40 79 13  8 61 97 87 18  4 98 45 42 72 96 92 30 34 73\nCard  32: 90 93 43  8 31 85 26 32 58 39 | 67 10  6 81 97  4 92 34 73 68 53 51 30 65 23 18 36 71 79 70 96 25 13 43 87\nCard  33: 43 89 29 67 13 18 55  2 79 97 | 43 79 28 67 93 55 18  2 21 94 92 99 51  9 31 70  5 68 84 97 29 74 87 53 26\nCard  34: 48 50  5 28 59 82 33 69  7 49 | 55 67 93 39 24 59 48 64 74 76 85  7 14 28 25  2 34 19 69 80  5 68 38 53 50\nCard  35:  8 86 26 41  2 63  7 70 42 56 | 59 87 33 12 86 26 99 29 31  5 97 19 62 47 73 22 42 15 40 32 83  9 88 70 78\nC" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 2402122.7197758206,
+          ips: 416.2984645902377,
+          std_dev: 387247.2504484106,
+          std_dev_ratio: 0.16121043577846458,
+          std_dev_ips: 67.11165689049793,
+          median: 2298085.0,
+          percentiles: %{50 => 2298085.0, 99 => 4407352.5},
+          mode: [2340086, 2239115, 2250185, 2355526, 2251065, 2254485, 2283915, 2296075, 2254985,
+           2353356, 2252255, 2292235, 2242885, 2258675, 2270925, 2257135, 2342406, 2302355, 2248445,
+           2256875, 2254085, 2352865, 2250405, 2334806, 2293605, 2349046, ...],
+          minimum: 2228594,
+          maximum: 6513931,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1249
+        },
+        samples: [2330305, 2264325, 2368046, 2254854, 2353026, 2330175, 2302895, 2292235, 2426317,
+         2312935, 2242885, 2243684, 2390136, 2335336, 2291445, 2287885, 2295105, 2288085, 2291905,
+         2441216, 2258475, 2249024, 2421487, 2292795, 2253395, 2246974, 2395246, 2358826, 2298505,
+         2277745, 2282095, 2286595, 2299165, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 917016.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 917016.0,
+          percentiles: %{50 => 917016.0, 99 => 917016.0},
+          mode: 917016,
+          minimum: 917016,
+          maximum: 917016,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1173
+        },
+        samples: [917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
+         917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
+         917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
+         ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 76059.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 76059.0,
+          percentiles: %{50 => 76059.0, 99 => 76059.0},
+          mode: 76059,
+          minimum: 76059,
+          maximum: 76059,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1213
+        },
+        samples: [76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059,
+         76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059,
+         76059, 76059, 76059, 76059, 76059, 76059, 76059, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\nCard 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\nCard 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1\nCard 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83\nCard 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\nCard 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 55519.875360377955,
+          ips: 18011.56781259014,
+          std_dev: 5215.770364163079,
+          std_dev_ratio: 0.09394420160902127,
+          std_dev_ips: 1692.0823578805264,
+          median: 54520.0,
+          percentiles: %{50 => 54520.0, 99 => 82278.20000000001},
+          mode: 53991,
+          minimum: 53031,
+          maximum: 405925,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 53763
+        },
+        samples: [68701, 56621, 55950, 68311, 55830, 56381, 55921, 54100, 58361, 55831, 55590,
+         56221, 54870, 58431, 55521, 57780, 55671, 55030, 54551, 55431, 55000, 59071, 57441, 55800,
+         54641, 55070, 55471, 54601, 55290, 55321, 54660, 55071, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 14376.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 14376.0,
+          percentiles: %{50 => 14376.0, 99 => 14376.0},
+          mode: 14376,
+          minimum: 14376,
+          maximum: 14376,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 35198
+        },
+        samples: [14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376,
+         14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376,
+         14376, 14376, 14376, 14376, 14376, 14376, 14376, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1237.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1237.0,
+          percentiles: %{50 => 1237.0, 99 => 1237.0},
+          mode: 1237,
+          minimum: 1237,
+          maximum: 1237,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 25293
+        },
+        samples: [1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237,
+         1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237,
+         1237, 1237, ...]
+      }
+    }
+  ]
+}
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":25848,"stamp":{"token":"XCP.svcxVIo1MAJP11CqgahvYI2Wky3X2UwpthIPxiGHIRnHEPTkMdP9ee1lZd6Qh7zafqSxX78L_uksiAwDB8d00IJsMDUaz7YR-5QbcymPN2EboNIvrIk","version":2}} -->
