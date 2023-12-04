@@ -3,36 +3,11 @@
 # 2023-04
 
 ```elixir
-Mix.install(
-  [
-    {:benchee, "~> 1.2"},
-    # {:exla, "~> 0.6.0"},
-    # {:explorer, "~> 0.7"},
-    {:kino, "~> 0.11.0"},
-    {:kino_aoc, "~> 0.1.5"}
-    # {:kino_vega_lite, "~> 0.1.11"},
-    # {:nimble_parsec, "~> 1.4"},
-    # {:nx, "~> 0.6.0"}
-  ]
-  # config: [
-  #   nx: [
-  #     default_backend: EXLA.Backend,
-  #     default_defn_options: [compiler: EXLA]
-  #   ],
-  #   exla: [
-  #     default_client: :cuda,
-  #     clients: [
-  #       host: [platform: :host],
-  #       cuda: [platform: :cuda]
-  #     ]
-  #   ]
-  # ],
-  # system_env: [
-  #   XLA_TARGET: "cuda120"
-  # ]
-)
-
-# Nx.global_default_backend(EXLA.Backend)
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"}
+])
 ```
 
 ## Problem
@@ -56,7 +31,7 @@ Mix.install(
 defmodule PartOne do
   @doc ~S"""
       iex> PartOne.parse("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53")
-      [{MapSet.new([6, 9, 17, 31, 48, 53, 83, 86]), MapSet.new([17, 41, 48, 83, 86])}]
+      [{1, MapSet.new([6, 9, 17, 31, 48, 53, 83, 86]), MapSet.new([17, 41, 48, 83, 86])}]
   """
   def parse(input) do
     input
@@ -65,14 +40,8 @@ defmodule PartOne do
   end
 
   def process(input) do
-    Enum.reduce(input, 0, fn {winning, drawn}, total ->
-      matches = winning |> MapSet.intersection(drawn) |> MapSet.size()
-
-      if matches > 0 do
-        total + Integer.pow(2, matches - 1)
-      else
-        total
-      end
+    Enum.reduce(input, 0, fn card, total ->
+      total + score_card(card)
     end)
   end
 
@@ -84,12 +53,26 @@ defmodule PartOne do
 
   @line_rx ~r/^Card *(?<card>\d+): (?<winning>[\d ]+) \| *(?<draws>[\d ]+)/
   def parse_line(line) do
-    %{"draws" => d, "winning" => w} = Regex.named_captures(@line_rx, line)
-    {num_list_to_set(d), num_list_to_set(w)}
+    %{"card" => c, "draws" => d, "winning" => w} = Regex.named_captures(@line_rx, line)
+    {String.to_integer(c), num_list_to_set(d), num_list_to_set(w)}
+  end
+
+  def count_matches({_card, winning, drawn}) do
+    winning |> MapSet.intersection(drawn) |> MapSet.size()
   end
 
   defp num_list_to_set(s) do
     s |> String.split() |> MapSet.new(&String.to_integer/1)
+  end
+
+  def score_card(card) do
+    matches = count_matches(card)
+
+    if matches > 0 do
+      Integer.pow(2, matches - 1)
+    else
+      0
+    end
   end
 end
 ```
@@ -97,15 +80,32 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, PartOne, <<70, 79, 82, 49, 0, 0, 15, ...>>, {:num_list_to_set, 1}}
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 16, ...>>, {:score_card, 1}}
+```
+
+```elixir
+test_input = """
+Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+"""
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\nCard 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\nCard 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1\nCard 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83\nCard 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\nCard 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n"
 ```
 
 ```elixir
 defmodule PartTwo do
   import PartOne, only: [parse: 1]
 
-  def process(_input) do
-    ""
+  def process(input) do
+    draw_recursively(input)
   end
 
   def solve(input) do
@@ -113,13 +113,54 @@ defmodule PartTwo do
     |> parse()
     |> process()
   end
+
+  def draw_recursively(cards) do
+    total = length(cards)
+
+    {initial_counts, draw_templates} =
+      Enum.reduce(cards, {%{}, %{}}, fn {card_num, _w, _d} = card, {counts, draws} ->
+        next = card_num + 1
+        counts = Map.update(counts, card_num, 1, &(&1 + 1))
+
+        draws =
+          Map.put_new_lazy(draws, card_num, fn ->
+            case PartOne.count_matches(card) do
+              0 ->
+                []
+
+              n ->
+                Range.new(next, min(total, next + n - 1))
+            end
+          end)
+
+        {counts, draws}
+      end)
+
+    count_and_push_stack(initial_counts, draw_templates)
+  end
+
+  def count_and_push_stack(counts, draw_templates, next \\ 1, count \\ 0)
+  def count_and_push_stack(counts, _draw_templates, _next, count) when counts == %{}, do: count
+
+  def count_and_push_stack(counts, draw_templates, next, count) do
+    template = Map.fetch!(draw_templates, next)
+    {added, counts} = Map.pop!(counts, next)
+
+    counts =
+      for draw <- template, reduce: counts do
+        acc ->
+          Map.update!(acc, draw, &(&1 + added))
+      end
+
+    count_and_push_stack(counts, draw_templates, next + 1, count + added)
+  end
 end
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 17, ...>>, {:count_and_push_stack, 4}}
 ```
 
 ## Solutions
@@ -145,7 +186,7 @@ PartTwo.solve(input)
 <!-- livebook:{"output":true} -->
 
 ```
-""
+9924412
 ```
 
 <!-- livebook:{"branch_parent_index":1} -->
@@ -180,15 +221,19 @@ end
 defmodule PartTwoTest do
   use ExUnit.Case, async: true
 
-  @moduletag :skip
-
   doctest PartOne
 
   describe "Part Two" do
     @test_input """
+    Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+    Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+    Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+    Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+    Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+    Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
     """
-    test "TODO" do
-      assert PartTwo.solve(@test_input) == false
+    test "draws and scores recursively" do
+      assert PartTwo.solve(@test_input) == 30
     end
   end
 end
@@ -199,9 +244,9 @@ ExUnit.run()
 <!-- livebook:{"output":true} -->
 
 ```
-**..
+....
 Finished in 0.00 seconds (0.00s async, 0.00s sync)
-2 doctests, 2 tests, 0 failures, 2 skipped
+2 doctests, 2 tests, 0 failures
 
 Randomized with seed 12345
 ```
@@ -209,7 +254,7 @@ Randomized with seed 12345
 <!-- livebook:{"output":true} -->
 
 ```
-%{total: 4, skipped: 2, failures: 0, excluded: 0}
+%{total: 4, skipped: 0, failures: 0, excluded: 0}
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
@@ -221,8 +266,8 @@ Randomized with seed 12345
 ```elixir
 Benchee.run(
   %{
-    "PartOne" => &PartOne.solve/1
-    # "PartTwo" => &PartTwo.solve/1
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
   },
   inputs: %{
     input: input,
@@ -259,44 +304,62 @@ memory time: 3 s
 reduction time: 3 s
 parallel: 1
 inputs: input, test_input
-Estimated total run time: 22 s
+Estimated total run time: 44 s
 
 Benchmarking PartOne with input input ...
 Benchmarking PartOne with input test_input ...
+Benchmarking PartTwo with input input ...
+Benchmarking PartTwo with input test_input ...
 
 ##### With input input #####
 Name              ips        average  deviation         median         99th %
-PartOne        416.30        2.40 ms    ±16.12%        2.30 ms        4.41 ms
+PartOne        417.05        2.40 ms     ±3.00%        2.37 ms        2.61 ms
+PartTwo        395.30        2.53 ms     ±5.70%        2.50 ms        2.94 ms
+
+Comparison: 
+PartOne        417.05
+PartTwo        395.30 - 1.06x slower +0.132 ms
 
 Memory usage statistics:
 
-Name       Memory usage
-PartOne       895.52 KB
+Name            average  deviation         median         99th %
+PartOne         0.87 MB     ±0.00%        0.87 MB        0.87 MB
+PartTwo         1.30 MB     ±0.00%        1.30 MB        1.30 MB
 
-**All measurements for memory usage were the same**
+Comparison: 
+PartOne         0.87 MB
+PartTwo         1.30 MB - 1.49x memory usage +0.43 MB
 
 Reduction count statistics:
 
 Name    Reduction count
-PartOne         76.06 K
+PartOne         77.12 K
+PartTwo         84.93 K - 1.10x reduction count +7.81 K
 
 **All measurements for reduction count were the same**
 
 ##### With input test_input #####
 Name              ips        average  deviation         median         99th %
-PartOne       18.01 K       55.52 μs     ±9.39%       54.52 μs       82.28 μs
+PartOne       17.64 K       56.69 μs     ±3.60%       56.10 μs       63.01 μs
+PartTwo       17.30 K       57.82 μs     ±3.60%       57.31 μs       63.17 μs
+
+Comparison: 
+PartOne       17.64 K
+PartTwo       17.30 K - 1.02x slower +1.13 μs
 
 Memory usage statistics:
 
 Name       Memory usage
-PartOne        14.04 KB
+PartOne        14.09 KB
+PartTwo        17.65 KB - 1.25x memory usage +3.56 KB
 
 **All measurements for memory usage were the same**
 
 Reduction count statistics:
 
 Name    Reduction count
-PartOne          1.24 K
+PartOne          1.26 K
+PartTwo          1.37 K - 1.09x reduction count +0.113 K
 
 **All measurements for reduction count were the same**
 ```
@@ -355,70 +418,147 @@ PartOne          1.24 K
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 2402122.7197758206,
-          ips: 416.2984645902377,
-          std_dev: 387247.2504484106,
-          std_dev_ratio: 0.16121043577846458,
-          std_dev_ips: 67.11165689049793,
-          median: 2298085.0,
-          percentiles: %{50 => 2298085.0, 99 => 4407352.5},
-          mode: [2340086, 2239115, 2250185, 2355526, 2251065, 2254485, 2283915, 2296075, 2254985,
-           2353356, 2252255, 2292235, 2242885, 2258675, 2270925, 2257135, 2342406, 2302355, 2248445,
-           2256875, 2254085, 2352865, 2250405, 2334806, 2293605, 2349046, ...],
-          minimum: 2228594,
-          maximum: 6513931,
+          average: 2397789.276578737,
+          ips: 417.05082667933215,
+          std_dev: 71883.02434271002,
+          std_dev_ratio: 0.02997887472633777,
+          std_dev_ips: 12.502714487535304,
+          median: 2371697.0,
+          percentiles: %{50 => 2371697.0, 99 => 2607260.8},
+          mode: [2328047, 2364897],
+          minimum: 2304687,
+          maximum: 2673121,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 1249
+          sample_size: 1251
         },
-        samples: [2330305, 2264325, 2368046, 2254854, 2353026, 2330175, 2302895, 2292235, 2426317,
-         2312935, 2242885, 2243684, 2390136, 2335336, 2291445, 2287885, 2295105, 2288085, 2291905,
-         2441216, 2258475, 2249024, 2421487, 2292795, 2253395, 2246974, 2395246, 2358826, 2298505,
-         2277745, 2282095, 2286595, 2299165, ...]
+        samples: [2427328, 2327727, 2405958, 2357577, 2313366, 2467869, 2401887, 2420028, 2373117,
+         2545390, 2323407, 2335636, 2359408, 2488218, 2427798, 2307467, 2364897, 2479908, 2404768,
+         2318247, 2312776, 2515619, 2316897, 2364777, 2313607, 2546309, 2375007, 2382718, 2400817,
+         2350727, 2402658, 2366137, 2551340, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 917016.0,
+          average: 913840.0215246637,
           ips: nil,
-          std_dev: 0.0,
-          std_dev_ratio: 0.0,
+          std_dev: 0.718743297882597,
+          std_dev_ratio: 7.865088866248553e-7,
           std_dev_ips: nil,
-          median: 917016.0,
-          percentiles: %{50 => 917016.0, 99 => 917016.0},
-          mode: 917016,
-          minimum: 917016,
-          maximum: 917016,
+          median: 913840.0,
+          percentiles: %{50 => 913840.0, 99 => 913840.0},
+          mode: 913840,
+          minimum: 913840,
+          maximum: 913864,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 1173
+          sample_size: 1115
         },
-        samples: [917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
-         917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
-         917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016, 917016,
+        samples: [913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840,
+         913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840,
+         913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840, 913840,
          ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 76059.0,
+          average: 77120.0,
           ips: nil,
           std_dev: 0.0,
           std_dev_ratio: 0.0,
           std_dev_ips: nil,
-          median: 76059.0,
-          percentiles: %{50 => 76059.0, 99 => 76059.0},
-          mode: 76059,
-          minimum: 76059,
-          maximum: 76059,
+          median: 77120.0,
+          percentiles: %{50 => 77120.0, 99 => 77120.0},
+          mode: 77120,
+          minimum: 77120,
+          maximum: 77120,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 1213
+          sample_size: 1240
         },
-        samples: [76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059,
-         76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059, 76059,
-         76059, 76059, 76059, 76059, 76059, 76059, 76059, ...]
+        samples: [77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120,
+         77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120, 77120,
+         77120, 77120, 77120, 77120, 77120, 77120, 77120, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "input",
+      input: "Card   1: 13  5 40 15 21 61 74 55 32 56 | 21 57 74 56  7 84 37 47 75 66 68  8 55 22 53 61 40 13 15 41 32 46 95 65  5\nCard   2: 92 97 39 23 25 40 33 70 55 77 | 25 70 23 91 45 60 34 56 82  6  9 62 24  3 67 99 18 58  1 26 50 37 32 14 85\nCard   3: 44 71 17 92 34 98 50 61 89 79 | 57 56 89 98 59 61 44 97 79 18 71 50 34 92 23 63 20 51 64 47 76 17 46 54 62\nCard   4: 87 70 44 19  3 54 81 15 72 46 | 75 70 74 84  1 61 85 14 79 66 26 93 39 73 67 21 91 12  3 86 41 42  6 27 49\nCard   5: 86 63 59 76 89 62 87 20  2 66 | 21 58 72 98 95 14 38 16 35 88 60 55  3 36 65  1 28 56 11 74 15 29 93 50 17\nCard   6: 24 92 61 55 50 51 78  2 60 91 | 55 91 51 56 45 67 13 36 66  8 99 62 78  2 92 49 44 69 42 65 50 34 35 82 60\nCard   7: 91 88 72 26 86 34 14 66 31 20 | 25 24 73 97 72 20 87 26 15 47 90 22 14 86 62 68 61 69 88 91 66 27 31 34 52\nCard   8: 40 66 64 42 52  5 18 49 67 94 | 23  5 66 53 33 24 95 86  2 46 67 87 68 71 83 21 78 41 29 62 70 69 61 60 93\nCard   9: 41 86 83  7 80  3 98 95 94 28 | 78 62 21 65 53  6 75 90 39 70 98 59 37 61 49 43 52 34 23 15 83 48 54 80 93\nCard  10: 50 21 55 47 37  4 29 96 80 54 | 79 68 69 55 51 58 37 95 35 73 70 21 64 87 94 89 53 47 62 29  6 41 24  9 54\nCard  11: 64 12 41 90 30 21 54 40  4 86 |  4 57 10 84 88 30 59 70  5 64 18 65 67 92 12 90 56 39 44 75 86 28  9 54 38\nCard  12: 18 17 83 38 62 89  5 35  6 99 |  6 22 19 44 34 36 57 97 46 28 86 89 60  8 26 74 98 38 39 95 96  1 67 35 17\nCard  13: 86 94 93 19 49 11  8 48 81 39 | 74 54 51 62 79 87 18 69 88 75 22 19 46 36 12 26 11 48 80 45 14 92  1 17 33\nCard  14: 92 83 90 42 44 88 77 24 29 46 | 88 93 12  4 74 31 38 34 59 40 18 97 20  2 95 53 23 32 92 68 56 87 71 69 54\nCard  15: 92 68 17 36 99 15 35 67 60 55 |  1 34 38 55 18 49 52 37 27 66 54 59 71 90 69 80 11 10 97 33 24 95 50 36 93\nCard  16:  6  8 62 88 47 96 46 35 78 33 | 13 72 75 84 45 82 95 59 42 55 29 20 70 52 16  4 80 71 94 85 12 61 50 18 81\nCard  17: 35 51 98 72 99 13 45 92 30 67 | 32 75 71  7 91 37 62 35 70 97 80 89 78 47 41 21 12 42  5 52 83 39 29 27 56\nCard  18:  3 10 38 62 66 33 53 14 34 41 | 47 72 60 57 55 37 48 44  7 43 94 75 91 84 77 74 46  1 28 68 26 27 23 80 71\nCard  19: 98 46 62 91 93 61 65 66 20 43 | 11 62 38 93 81 47 43 65 53 59 69  7 57 10 18 61 15 46 20 44 66 86 91 98 30\nCard  20: 56  1 31 96 46  3 25 40 33 59 | 58 82 66 56 75 49 19  1 25 93 46 87 29 18 40 96 48 86  3 33 91 31 24 59 14\nCard  21: 93 43 29 76 85 88 81 58 13 89 | 81 39 93 41 82 20 70 13  3 12 58 43 26 69 89 49 29 85 30 75 96 97 74 76 16\nCard  22: 99 16 89  6 57 37 95 93 87 33 | 78 22 69 84 60 93 33 57 31 38 92 99 46  6 50 16 95 47 89 25 87 83 67 37 39\nCard  23: 96 64 85 18 82 33 29 17 24 99 | 76 99 53 17 78 38 82 96 18 85  1 73 36 24 11 47 40 64 89 98 20  9 23 84 57\nCard  24: 73 21 29 44 15 91 95 12  6 55 | 63 56 34 55 59 62 94 29 89 95 21 28 91 78 83 12  6  2 84 46 73 81 15 44 20\nCard  25: 15 92 59 63 87 68 61 26 98 97 |  4 59 46 83 68 10 32 15 58 85 78 22 98 77 92 56 42 36 61  7 87 17 26 97 63\nCard  26: 87 71 84 55 92  9 26 10 24 25 | 65  1 34 35 50 59  2 23  6 63 56  5 98 45  7 41 58 93 54 27 44 82 46 47 21\nCard  27: 62 49 39 32 15 77 78 50 34 65 | 78 76 20 60 65 56 82 22 39 99 72 35 33 77 49  1 50 42 62 26 16 23 75 43 95\nCard  28: 30 70 26 71 78 57 14 91 66 25 | 61 36  4 46 81 41 99 14 76 78 71 26  2 66  9 48 91 11 30 70 57 42 25 62 87\nCard  29: 14  6 35  9 21 68 50 63 76 59 |  3 43 58 33 93  1 90 21 78 47 99 16 67 80 84 71 97 38 10 83 70 34 44 46 57\nCard  30: 35 11 67 65 88 86 98 76 79 34 | 37 86 44 99 96 76 14 32 65 47 88 67 12 35 34 39 84 90 49 98 66 79 30 11 82\nCard  31: 71 25  9 26 24 23 66 47 40 67 | 65 28  1  2 81 15 38 40 79 13  8 61 97 87 18  4 98 45 42 72 96 92 30 34 73\nCard  32: 90 93 43  8 31 85 26 32 58 39 | 67 10  6 81 97  4 92 34 73 68 53 51 30 65 23 18 36 71 79 70 96 25 13 43 87\nCard  33: 43 89 29 67 13 18 55  2 79 97 | 43 79 28 67 93 55 18  2 21 94 92 99 51  9 31 70  5 68 84 97 29 74 87 53 26\nCard  34: 48 50  5 28 59 82 33 69  7 49 | 55 67 93 39 24 59 48 64 74 76 85  7 14 28 25  2 34 19 69 80  5 68 38 53 50\nCard  35:  8 86 26 41  2 63  7 70 42 56 | 59 87 33 12 86 26 99 29 31  5 97 19 62 47 73 22 42 15 40 32 83  9 88 70 78\nC" <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 2529746.863406408,
+          ips: 395.2964679847291,
+          std_dev: 144214.24949898393,
+          std_dev_ratio: 0.05700738346001683,
+          std_dev_ips: 22.53481733079572,
+          median: 2499163.5,
+          percentiles: %{50 => 2499163.5, 99 => 2941196.2999999993},
+          mode: [2410097, 2556000, 2442718, 2488969, 2551119, 2493388, 2565500, 2537269, 2527359,
+           2432538, 2439188, 2557919, 2477379, 2446408, 2529719, 2564759, 2444148, 2499569, 2479948,
+           2430628],
+          minimum: 2387278,
+          maximum: 4315830,
+          relative_more: 1.05503302067309,
+          relative_less: 0.9478376320032333,
+          absolute_difference: 131957.58682767116,
+          sample_size: 1186
+        },
+        samples: [2582740, 2501368, 2596270, 2492399, 2589170, 2504089, 2619800, 2501108, 2603200,
+         2508359, 2600300, 2513479, 2601480, 2566909, 2608600, 2557470, 2559659, 2633880, 2486349,
+         2482499, 2618640, 2485688, 2588110, 2809042, 2488969, 2487378, 2620001, 2501668, 2492209,
+         2631960, 2558810, 2615270, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1364792.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1364792.0,
+          percentiles: %{50 => 1364792.0, 99 => 1364792.0},
+          mode: 1364792,
+          minimum: 1364792,
+          maximum: 1364792,
+          relative_more: 1.4934692811143921,
+          relative_less: 0.6695819007765752,
+          absolute_difference: 450951.97847533633,
+          sample_size: 1072
+        },
+        samples: [1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792,
+         1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792,
+         1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792, 1364792,
+         1364792, 1364792, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 84933.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 84933.0,
+          percentiles: %{50 => 84933.0, 99 => 84933.0},
+          mode: 84933,
+          minimum: 84933,
+          maximum: 84933,
+          relative_more: 1.1013096473029045,
+          relative_less: 0.9080098430527592,
+          absolute_difference: 7813.0,
+          sample_size: 1180
+        },
+        samples: [84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933,
+         84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933, 84933,
+         84933, 84933, 84933, 84933, 84933, 84933, ...]
       }
     },
     %Benchee.Scenario{
@@ -434,66 +574,141 @@ PartOne          1.24 K
       tag: nil,
       run_time_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 55519.875360377955,
-          ips: 18011.56781259014,
-          std_dev: 5215.770364163079,
-          std_dev_ratio: 0.09394420160902127,
-          std_dev_ips: 1692.0823578805264,
-          median: 54520.0,
-          percentiles: %{50 => 54520.0, 99 => 82278.20000000001},
-          mode: 53991,
-          minimum: 53031,
-          maximum: 405925,
+          average: 56685.57118170943,
+          ips: 17641.173567686783,
+          std_dev: 2041.8993407473222,
+          std_dev_ratio: 0.03602150067786873,
+          std_dev_ips: 635.4615456268294,
+          median: 56100.0,
+          percentiles: %{50 => 56100.0, 99 => 63014.799999999974},
+          mode: 55761,
+          minimum: 54720,
+          maximum: 183402,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 53763
+          sample_size: 52661
         },
-        samples: [68701, 56621, 55950, 68311, 55830, 56381, 55921, 54100, 58361, 55831, 55590,
-         56221, 54870, 58431, 55521, 57780, 55671, 55030, 54551, 55431, 55000, 59071, 57441, 55800,
-         54641, 55070, 55471, 54601, 55290, 55321, 54660, 55071, ...]
+        samples: [72051, 59480, 63381, 63151, 58380, 60231, 66541, 59691, 59740, 58801, 59491,
+         58220, 63551, 58471, 59500, 61441, 58541, 58250, 57951, 64191, 58351, 58230, 68161, 58261,
+         59700, 58481, 59401, 58060, 57211, 61971, 58020, ...]
       },
       memory_usage_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 14376.0,
+          average: 14424.0,
           ips: nil,
           std_dev: 0.0,
           std_dev_ratio: 0.0,
           std_dev_ips: nil,
-          median: 14376.0,
-          percentiles: %{50 => 14376.0, 99 => 14376.0},
-          mode: 14376,
-          minimum: 14376,
-          maximum: 14376,
+          median: 14424.0,
+          percentiles: %{50 => 14424.0, 99 => 14424.0},
+          mode: 14424,
+          minimum: 14424,
+          maximum: 14424,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 35198
+          sample_size: 35591
         },
-        samples: [14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376,
-         14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376, 14376,
-         14376, 14376, 14376, 14376, 14376, 14376, 14376, ...]
+        samples: [14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424,
+         14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424, 14424,
+         14424, 14424, 14424, 14424, 14424, 14424, ...]
       },
       reductions_data: %Benchee.CollectionData{
         statistics: %Benchee.Statistics{
-          average: 1237.0,
+          average: 1256.0,
           ips: nil,
           std_dev: 0.0,
           std_dev_ratio: 0.0,
           std_dev_ips: nil,
-          median: 1237.0,
-          percentiles: %{50 => 1237.0, 99 => 1237.0},
-          mode: 1237,
-          minimum: 1237,
-          maximum: 1237,
+          median: 1256.0,
+          percentiles: %{50 => 1256.0, 99 => 1256.0},
+          mode: 1256,
+          minimum: 1256,
+          maximum: 1256,
           relative_more: nil,
           relative_less: nil,
           absolute_difference: nil,
-          sample_size: 25293
+          sample_size: 25495
         },
-        samples: [1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237,
-         1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237, 1237,
-         1237, 1237, ...]
+        samples: [1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256,
+         1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256, 1256,
+         1256, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "test_input",
+      input: "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\nCard 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\nCard 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1\nCard 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83\nCard 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\nCard 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 57817.33073824464,
+          ips: 17295.852078112737,
+          std_dev: 2080.3364966975087,
+          std_dev_ratio: 0.03598119231957938,
+          std_dev_ips: 622.3253799535711,
+          median: 57310.0,
+          percentiles: %{50 => 57310.0, 99 => 63171.0},
+          mode: 57051,
+          minimum: 55050,
+          maximum: 174442,
+          relative_more: 1.019965566773726,
+          relative_less: 0.9804252541221765,
+          absolute_difference: 1131.7595565352094,
+          sample_size: 51636
+        },
+        samples: [72681, 60581, 63791, 61310, 58761, 59181, 58990, 64911, 59671, 58880, 58541,
+         61621, 59560, 58761, 58921, 58790, 58581, 58981, 59101, 58950, 60631, 72031, 73591, 68880,
+         59671, 59001, 59250, 59151, 58651, 61851, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 18072.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 18072.0,
+          percentiles: %{50 => 18072.0, 99 => 18072.0},
+          mode: 18072,
+          minimum: 18072,
+          maximum: 18072,
+          relative_more: 1.2529118136439268,
+          relative_less: 0.798140770252324,
+          absolute_difference: 3648.0,
+          sample_size: 33006
+        },
+        samples: [18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072,
+         18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072, 18072,
+         18072, 18072, 18072, 18072, 18072, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1369.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1369.0,
+          percentiles: %{50 => 1369.0, 99 => 1369.0},
+          mode: 1369,
+          minimum: 1369,
+          maximum: 1369,
+          relative_more: 1.089968152866242,
+          relative_less: 0.9174579985390796,
+          absolute_difference: 113.0,
+          sample_size: 25386
+        },
+        samples: [1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369,
+         1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369, 1369,
+         ...]
       }
     }
   ]
@@ -506,4 +721,4 @@ PartOne          1.24 K
 
 Sometimes my ideas don't work out.
 
-<!-- livebook:{"offset":25848,"stamp":{"token":"XCP.svcxVIo1MAJP11CqgahvYI2Wky3X2UwpthIPxiGHIRnHEPTkMdP9ee1lZd6Qh7zafqSxX78L_uksiAwDB8d00IJsMDUaz7YR-5QbcymPN2EboNIvrIk","version":2}} -->
+<!-- livebook:{"offset":38542,"stamp":{"token":"XCP.lTLhEwSRZ60-x09MkzFi2g2rSH-4hZi8fQdroaTluR_jAyg4VPFdF82Q0lT9wXNuKkIBU1wX42ht5yS-76a-sqQGzOump9vB2civP48Shb_Bcqw4Kwc","version":2}} -->
