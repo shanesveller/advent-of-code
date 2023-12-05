@@ -1,0 +1,283 @@
+# Advent of Code Template
+
+```elixir
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"},
+  {:nimble_parsec, "~> 1.4"}
+])
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"5","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "5", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+## Solvers
+
+```elixir
+defmodule ParserDay5 do
+  import NimbleParsec
+
+  @labels_in_order ~w(seed soil fertilizer water light temperature humidity location)
+
+  ws = ascii_char([?\s]) |> times(min: 1) |> ignore()
+  newlines = ascii_char([?\n]) |> times(min: 1) |> ignore()
+
+  seeds =
+    string("seeds: ")
+    |> ignore()
+    |> concat(
+      ws
+      |> optional()
+      |> integer(min: 1)
+      |> times(min: 1)
+    )
+    |> tag(:seeds)
+
+  label =
+    @labels_in_order
+    |> Enum.map(&string/1)
+    |> choice()
+    |> map({String, :to_atom, []})
+
+  range_map =
+    integer(min: 1)
+    |> concat(optional(ws))
+    |> times(3)
+    |> reduce(:parse_range)
+    |> concat(optional(newlines))
+
+  mapping =
+    label
+    |> concat(ignore(string("-to-")))
+    |> concat(label)
+    |> concat(ignore(string(" map:")))
+    |> concat(newlines)
+    |> concat(times(range_map, min: 1))
+    |> tag(:mapping)
+    |> concat(optional(newlines))
+
+  defparsec(
+    :input,
+    seeds
+    |> concat(newlines)
+    |> concat(
+      mapping
+      |> times(min: 1)
+      |> reduce(:create_mappings_map)
+    )
+  )
+
+  def labels, do: @labels_in_order
+
+  defp create_mappings_map(mappings) do
+    {:mappings,
+     Map.new(mappings, fn {:mapping, [from, to | ranges]} ->
+       {{from, to}, Enum.sort(ranges)}
+     end)}
+  end
+
+  defp parse_range([dest_start, source_start, range_size]) do
+    {range_from_start_size(source_start, range_size), dest_start - source_start}
+  end
+
+  defp range_from_start_size(start, size), do: Range.new(start, start + size)
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input
+|> ParserDay5.input()
+```
+
+```elixir
+target = 17
+offset = 34
+
+Enum.find_value([1..8], target, fn range ->
+  if target in range, do: target + offset
+end)
+```
+
+```elixir
+defmodule PartOne do
+  def parse(input) do
+    {:ok, parsed, "", _context, _line, _column} = ParserDay5.input(input)
+    parsed
+  end
+
+  def process(input) do
+    seeds = Keyword.fetch!(input, :seeds)
+    mappings = Keyword.fetch!(input, :mappings)
+
+    conversion_order = Enum.map(ParserDay5.labels(), &String.to_atom/1)
+
+    seeds
+    |> Enum.map(&seed_to_location(&1, conversion_order, mappings))
+    |> Enum.min()
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+
+  def maybe_convert_number(n, current, next, mappings) do
+    mappings
+    |> Map.fetch!({current, next})
+    |> Enum.find_value(n, fn {range, offset} ->
+      if n in range, do: n + offset
+    end)
+  end
+
+  def seed_to_location(seed, conversion_order, mappings) do
+    conversion_order
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.reduce(seed, fn [current, next], n ->
+      maybe_convert_number(n, current, next, mappings)
+    end)
+  end
+end
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    seeds: 79 14 55 13
+
+    seed-to-soil map:
+    50 98 2
+    52 50 48
+
+    soil-to-fertilizer map:
+    0 15 37
+    37 52 2
+    39 0 15
+
+    fertilizer-to-water map:
+    49 53 8
+    0 11 42
+    42 0 7
+    57 7 4
+
+    water-to-light map:
+    88 18 7
+    18 25 70
+
+    light-to-temperature map:
+    45 77 23
+    81 45 19
+    68 64 13
+
+    temperature-to-humidity map:
+    0 69 1
+    1 0 69
+
+    humidity-to-location map:
+    60 56 37
+    56 93 4
+
+    """
+    test "finds closest location" do
+      assert PartOne.solve(@test_input) == 35
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":4967,"stamp":{"token":"XCP.DAQP0ITxP0m9CiBArZJ9XGiNmEeDJv7VdTUTMg_FmSeGIaqMqQNwuJHvKY1lE8g2P-9Y027q4_l3Y05UY726pHQEzpywV2qOA4qfjbvAeia4iBY4J1U","version":2}} -->
