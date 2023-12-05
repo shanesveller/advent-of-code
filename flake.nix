@@ -44,7 +44,7 @@
               "libcublas"
               "nvidia-x11"
             ];
-          enableCuda = true;
+          enableCuda = system == "x86_64-linux";
         };
         inherit (stable.zfs.latestCompatibleLinuxPackages) nvidia_x11;
         cudaPackages = unstable.cudaPackages_12_1.overrideScope' (final: prev: {
@@ -66,7 +66,7 @@
         beamWorkspace = {
           enable = true;
           devShell = {
-            extraArgs = {
+            extraArgs = lib.mkIf pkgs.stdenv.isLinux {
               LD_LIBRARY_PATH = lib.makeLibraryPath ([nvidia_x11]
                 ++ (with cudaPackages; [
                   cudatoolkit
@@ -77,16 +77,17 @@
               XLA_TARGET = "cuda120";
             };
             extraPackages =
-              [livebook nvidia_x11]
-              ++ (with pkgs; [
-                autoconf
-                cmake
-                gcc
-                gnumake
-              ])
-              ++ (with cudaPackages; [
-                cudatoolkit
-              ]);
+              [livebook]
+              ++ lib.optionals pkgs.stdenv.isLinux ([nvidia_x11]
+                ++ (with pkgs; [
+                  autoconf
+                  cmake
+                  gcc
+                  gnumake
+                ])
+                ++ (with cudaPackages; [
+                  cudatoolkit
+                ]));
             languageServers.elixir = true;
             languageServers.erlang = false;
           };
