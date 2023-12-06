@@ -1,0 +1,181 @@
+# 2023-06
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    # {:exla, "~> 0.6.0"},
+    # {:explorer, "~> 0.7"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"}
+    # {:kino_vega_lite, "~> 0.1.11"},
+    # {:nimble_parsec, "~> 1.4"},
+    # {:nx, "~> 0.6.0"}
+  ]
+  # config: [
+  #   nx: [
+  #     default_backend: EXLA.Backend,
+  #     default_defn_options: [compiler: EXLA]
+  #   ],
+  #   exla: [
+  #     default_client: :cuda,
+  #     clients: [
+  #       host: [platform: :host],
+  #       cuda: [platform: :cuda]
+  #     ]
+  #   ]
+  # ],
+  # system_env: [
+  #   XLA_TARGET: "cuda120"
+  # ]
+)
+
+# Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"6","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "6", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> PartOne.parse("Time:      7  15   30\nDistance:  9  40  200")
+      [{7,9},{15,40},{30,200}]
+  """
+  def parse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.split(&1, ~r/:\s+/, parts: 2))
+    |> Enum.map(fn [_label, nums] ->
+      nums |> String.split() |> Enum.map(&String.to_integer/1)
+    end)
+    |> Enum.zip()
+  end
+
+  def process(input) do
+    input
+    |> Enum.map(fn {time, previous_best} ->
+      Enum.count(0..time, fn hold ->
+        distance = (time - hold) * hold
+        distance > previous_best
+      end)
+    end)
+    |> Enum.product()
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    Time:      7  15   30
+    Distance:  9  40  200
+    """
+    test "counts ways to win" do
+      assert PartOne.solve(@test_input) == 288
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+# Benchee.run(
+#   %{
+#     "PartOne" => &PartOne.solve/1,
+#     "PartTwo" => &PartTwo.solve/1
+#   },
+#   inputs: %{
+#     input: input,
+#     test_input: """
+#     """
+#   },
+#   warmup: 2,
+#   time: 3,
+#   memory_time: 3,
+#   reduction_time: 3
+# )
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":3110,"stamp":{"token":"XCP.JuYyNsPTMULyQKL4HOrY51gl89fJU_-m-8SgG2TLHvLmun3MPetZmUPw747XMoGjS8dE1mckDysq-gwfu-n9JARV5DTaeI-RfLGuNiZH1s2yJNS5lfQ","version":2}} -->
