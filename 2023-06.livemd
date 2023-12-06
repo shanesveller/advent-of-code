@@ -1,36 +1,13 @@
+<!-- livebook:{"persist_outputs":true} -->
+
 # 2023-06
 
 ```elixir
-Mix.install(
-  [
-    {:benchee, "~> 1.2"},
-    # {:exla, "~> 0.6.0"},
-    # {:explorer, "~> 0.7"},
-    {:kino, "~> 0.11.0"},
-    {:kino_aoc, "~> 0.1.5"}
-    # {:kino_vega_lite, "~> 0.1.11"},
-    # {:nimble_parsec, "~> 1.4"},
-    # {:nx, "~> 0.6.0"}
-  ]
-  # config: [
-  #   nx: [
-  #     default_backend: EXLA.Backend,
-  #     default_defn_options: [compiler: EXLA]
-  #   ],
-  #   exla: [
-  #     default_client: :cuda,
-  #     clients: [
-  #       host: [platform: :host],
-  #       cuda: [platform: :cuda]
-  #     ]
-  #   ]
-  # ],
-  # system_env: [
-  #   XLA_TARGET: "cuda120"
-  # ]
-)
-
-# Nx.global_default_backend(EXLA.Backend)
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"}
+])
 ```
 
 ## Problem
@@ -39,6 +16,12 @@ Mix.install(
 
 ```elixir
 {:ok, input} = KinoAOC.download_puzzle("2023", "6", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok, "Time:        40     82     91     66\nDistance:   277   1338   1349   1063"}
 ```
 
 ## Solvers
@@ -78,12 +61,31 @@ defmodule PartOne do
 end
 ```
 
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 13, ...>>, {:solve, 1}}
+```
+
 ```elixir
 defmodule PartTwo do
-  import PartOne, only: [parse: 1]
+  def parse(input) do
+    [distance, time] =
+      ~r/^Time:\s+(?<time>(\d|\s)*)\nDistance:\s+(?<distance>(\d|\s)*)$/
+      |> Regex.run(input, capture: :all_names)
 
-  def process(_input) do
-    ""
+    distance = collapse_number(distance)
+    time = collapse_number(time)
+    {distance, time}
+  end
+
+  def process({distance, time}) do
+    for hold <- 0..time,
+        new_dist = (time - hold) * hold,
+        new_dist > distance,
+        reduce: 0 do
+      acc -> acc + 1
+    end
   end
 
   def solve(input) do
@@ -91,17 +93,43 @@ defmodule PartTwo do
     |> parse()
     |> process()
   end
+
+  defp collapse_number(s) do
+    s |> String.split() |> Enum.join("") |> String.to_integer()
+  end
 end
 ```
 
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:collapse_number, 1}}
+```
+
 ## Solutions
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 PartOne.solve(input)
 ```
 
+<!-- livebook:{"output":true} -->
+
+```
+505494
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+23632299
 ```
 
 <!-- livebook:{"branch_parent_index":1} -->
@@ -132,20 +160,36 @@ end
 defmodule PartTwoTest do
   use ExUnit.Case, async: true
 
-  @moduletag :skip
-
   doctest PartOne
 
   describe "Part Two" do
     @test_input """
+    Time:      7  15   30
+    Distance:  9  40  200
     """
-    test "TODO" do
-      assert PartTwo.solve(@test_input) == false
+    test "counts ways to win single race" do
+      assert PartTwo.solve(@test_input) == 71503
     end
   end
 end
 
 ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+....
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+2 doctests, 2 tests, 0 failures
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 4, skipped: 0, failures: 0, excluded: 0}
 ```
 
 <!-- livebook:{"branch_parent_index":0} -->
@@ -155,21 +199,435 @@ ExUnit.run()
 ## Benchmarks
 
 ```elixir
-# Benchee.run(
-#   %{
-#     "PartOne" => &PartOne.solve/1,
-#     "PartTwo" => &PartTwo.solve/1
-#   },
-#   inputs: %{
-#     input: input,
-#     test_input: """
-#     """
-#   },
-#   warmup: 2,
-#   time: 3,
-#   memory_time: 3,
-#   reduction_time: 3
-# )
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    Time:      7  15   30
+    Distance:  9  40  200
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Operating System: Linux
+CPU Information: AMD Ryzen 9 5950X 16-Core Processor
+Number of Available Cores: 32
+Available memory: 62.71 GB
+Elixir 1.15.7
+Erlang 26.1.2
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 3 s
+memory time: 3 s
+reduction time: 3 s
+parallel: 1
+inputs: input, test_input
+Estimated total run time: 44 s
+
+Benchmarking PartOne with input input ...
+Benchmarking PartOne with input test_input ...
+Benchmarking PartTwo with input input ...
+Benchmarking PartTwo with input test_input ...
+
+##### With input input #####
+Name              ips        average  deviation         median         99th %
+PartOne       72.74 K      0.0137 ms    ±26.40%      0.0136 ms      0.0178 ms
+PartTwo     0.00324 K      308.49 ms     ±0.69%      307.75 ms      314.30 ms
+
+Comparison: 
+PartOne       72.74 K
+PartTwo     0.00324 K - 22438.17x slower +308.48 ms
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         3.10 KB
+PartTwo         0.74 KB - 0.24x memory usage -2.35938 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne       0.00159 M
+PartTwo        102.07 M - 64156.53x reduction count +102.07 M
+
+**All measurements for reduction count were the same**
+
+##### With input test_input #####
+Name              ips        average  deviation         median         99th %
+PartOne       87.79 K       11.39 μs    ±24.11%       11.16 μs       19.92 μs
+PartTwo        1.78 K      562.17 μs     ±4.82%      556.85 μs      720.72 μs
+
+Comparison: 
+PartOne       87.79 K
+PartTwo        1.78 K - 49.36x slower +550.78 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         2.64 KB
+PartTwo         0.77 KB - 0.29x memory usage -1.87500 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne          0.52 K
+PartTwo        178.92 K - 341.46x reduction count +178.40 K
+
+**All measurements for reduction count were the same**
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %{
+    erlang: "26.1.2",
+    os: :Linux,
+    elixir: "1.15.7",
+    available_memory: "62.71 GB",
+    cpu_speed: "AMD Ryzen 9 5950X 16-Core Processor",
+    num_cores: 32
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 3000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 3000000000.0,
+    reduction_time: 3000000000.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: [
+      {"input", "Time:        40     82     91     66\nDistance:   277   1338   1349   1063"},
+      {"test_input", "Time:      7  15   30\nDistance:  9  40  200\n"}
+    ],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "input",
+      input: "Time:        40     82     91     66\nDistance:   277   1338   1349   1063",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 13748.504690221274,
+          ips: 72735.18266399235,
+          std_dev: 3629.2035066354165,
+          std_dev_ratio: 0.2639707799799286,
+          std_dev_ips: 19199.962899796643,
+          median: 13550.0,
+          percentiles: %{50 => 13550.0, 99 => 17830.0},
+          mode: 13540,
+          minimum: 13330,
+          maximum: 1340254,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 214169
+        },
+        samples: [25820, 14811, 26950, 15190, 21530, 15791, 28960, 21710, 14280, 20210, 14101,
+         18970, 15030, 14870, 14010, 14841, 14180, 14020, 13960, 15680, 14130, 13950, 13921, 14070,
+         15650, 15780, 14850, 14150, 14781, 14090, 13950, 13980, 15100, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 3176.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 3176.0,
+          percentiles: %{50 => 3176.0, 99 => 3176.0},
+          mode: 3176,
+          minimum: 3176,
+          maximum: 3176,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 93715
+        },
+        samples: [3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176,
+         3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176, 3176,
+         3176, 3176, 3176, 3176, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1591.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1591.0,
+          percentiles: %{50 => 1591.0, 99 => 1591.0},
+          mode: 1591,
+          minimum: 1591,
+          maximum: 1591,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 32377
+        },
+        samples: [1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591,
+         1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591, 1591,
+         1591, 1591, 1591, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "input",
+      input: "Time:        40     82     91     66\nDistance:   277   1338   1349   1063",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 308491230.7,
+          ips: 3.241583229872991,
+          std_dev: 2140555.4427733654,
+          std_dev_ratio: 0.006938788625907496,
+          std_dev_ips: 0.022492660845375198,
+          median: 307754029.5,
+          percentiles: %{50 => 307754029.5, 99 => 314304011.0},
+          mode: nil,
+          minimum: 307021015,
+          maximum: 314304011,
+          relative_more: 22438.166015204304,
+          relative_less: 4.456692223965145e-5,
+          absolute_difference: 308477482.19530976,
+          sample_size: 10
+        },
+        samples: [307021015, 307399118, 307859122, 308390188, 314304011, 309237815, 307280934,
+         307648937, 307553856, 308217311]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 760.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 760.0,
+          percentiles: %{50 => 760.0, 99 => 760.0},
+          mode: 760,
+          minimum: 760,
+          maximum: 760,
+          relative_more: 0.23929471032745592,
+          relative_less: 4.178947368421053,
+          absolute_difference: -2416.0,
+          sample_size: 10
+        },
+        samples: [760, 760, 760, 760, 760, 760, 760, 760, 760, 760]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 102073037.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 102073037.0,
+          percentiles: %{50 => 102073037.0, 99 => 102073037.0},
+          mode: 102073037,
+          minimum: 102073037,
+          maximum: 102073037,
+          relative_more: 64156.52859836581,
+          relative_less: 1.5586878246798907e-5,
+          absolute_difference: 102071446.0,
+          sample_size: 10
+        },
+        samples: [102073037, 102073037, 102073037, 102073037, 102073037, 102073037, 102073037,
+         102073037, 102073037, 102073037]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "Time:      7  15   30\nDistance:  9  40  200\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 11390.20788310508,
+          ips: 87794.71018112713,
+          std_dev: 2746.6531865007623,
+          std_dev_ratio: 0.24114162047690374,
+          std_dev_ips: 21170.958682377113,
+          median: 11160.0,
+          percentiles: %{50 => 11160.0, 99 => 19924.329999999958},
+          mode: 11150,
+          minimum: 10960,
+          maximum: 931501,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 257462
+        },
+        samples: [23420, 15650, 12110, 17411, 11930, 11850, 14890, 12520, 13460, 11930, 13101,
+         11870, 13230, 15210, 12400, 13770, 11890, 12991, 12180, 11830, 11780, 13440, 12100, 11850,
+         11811, 11780, 11740, 13580, 12930, 12000, 15410, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 2704.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 2704.0,
+          percentiles: %{50 => 2704.0, 99 => 2704.0},
+          mode: 2704,
+          minimum: 2704,
+          maximum: 2704,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 107851
+        },
+        samples: [2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704,
+         2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704, 2704,
+         2704, 2704, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 524.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 524.0,
+          percentiles: %{50 => 524.0, 99 => 524.0},
+          mode: 524,
+          minimum: 524,
+          maximum: 524,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 33550
+        },
+        samples: [524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524,
+         524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, 524, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "test_input",
+      input: "Time:      7  15   30\nDistance:  9  40  200\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 562169.6537307836,
+          ips: 1778.8224486391223,
+          std_dev: 27118.01888522485,
+          std_dev_ratio: 0.04823814075565763,
+          std_dev_ips: 85.80708765677755,
+          median: 556846.0,
+          percentiles: %{50 => 556846.0, 99 => 720718.0},
+          mode: [557886, 554886],
+          minimum: 541446,
+          maximum: 772308,
+          relative_more: 49.355521821918735,
+          relative_less: 0.020261157477133612,
+          absolute_difference: 550779.4458476786,
+          sample_size: 5334
+        },
+        samples: [560166, 557966, 562076, 561596, 554756, 557666, 554986, 560576, 554676, 560986,
+         561816, 557496, 557896, 556046, 568606, 562586, 557576, 556156, 557235, 557756, 554416,
+         556936, 554536, 557386, 553846, 557156, 555116, 557726, 559376, 554716, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 784.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 784.0,
+          percentiles: %{50 => 784.0, 99 => 784.0},
+          mode: 784,
+          minimum: 784,
+          maximum: 784,
+          relative_more: 0.28994082840236685,
+          relative_less: 3.4489795918367347,
+          absolute_difference: -1920.0,
+          sample_size: 5251
+        },
+        samples: [784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784,
+         784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, 784, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 178924.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 178924.0,
+          percentiles: %{50 => 178924.0, 99 => 178924.0},
+          mode: 178924,
+          minimum: 178924,
+          maximum: 178924,
+          relative_more: 341.4580152671756,
+          relative_less: 0.002928617737139791,
+          absolute_difference: 178400.0,
+          sample_size: 5286
+        },
+        samples: [178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924,
+         178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924, 178924,
+         178924, 178924, 178924, 178924, 178924, 178924, 178924, ...]
+      }
+    }
+  ]
+}
 ```
 
 <!-- livebook:{"branch_parent_index":1} -->
@@ -178,4 +636,4 @@ ExUnit.run()
 
 Sometimes my ideas don't work out.
 
-<!-- livebook:{"offset":3110,"stamp":{"token":"XCP.JuYyNsPTMULyQKL4HOrY51gl89fJU_-m-8SgG2TLHvLmun3MPetZmUPw747XMoGjS8dE1mckDysq-gwfu-n9JARV5DTaeI-RfLGuNiZH1s2yJNS5lfQ","version":2}} -->
+<!-- livebook:{"offset":17695,"stamp":{"token":"XCP.7fGrqE7pVTeJ8TkBFXHfIdajjWyoZ4IqLZ0JHiU7ILyHdrIOZ0UaV9ZA69rUtJr32ILy_3b8Q_TnytUVewdx0raXdx_0r3jBaAnBoLjjWzarl1G0GNs","version":2}} -->
