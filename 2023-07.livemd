@@ -1,0 +1,426 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# 2023-07
+
+```elixir
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"},
+  {:nimble_parsec, "~> 1.4"}
+])
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"7","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "7", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "T6JTT 716\n8J29Q 523\n486TK 358\n3AAAA 945\nJ5552 239\n38AJ8 703\nK8Q88 653\n7634K 905\nA222A 390\nAAJAA 317\n288Q2 825\nKQ77Q 107\nJJ7K7 249\nQQ4JJ 519\n433J9 411\nT6TTT 304\nK59KK 178\nQQQTT 524\nAQKQ6 21\nQ8886 853\n79J6J 84\n33Q3Q 740\nTAJA2 998\n464A4 584\n55667 686\nQTT6Q 810\nA9799 708\n5643T 157\n353AK 319\n228JK 466\n44TTT 760\n85637 553\n9K9A4 897\nA9J8A 334\nQKQQ5 600\n8QA5A 200\n33823 273\nJ228A 345\n65668 986\nKA8K7 101\n4A735 791\n55A55 901\n7727Q 301\n889J9 494\n44848 134\n98298 408\n83KK3 562\nT48T4 587\n46626 190\nJ425K 568\n787JJ 739\nT8JJQ 573\n62J8K 976\n9JJ99 823\n7777J 860\nJ3KA2 1\n65646 843\n78877 316\nJJ888 614\n527KT 765\nAA9AA 124\n4774A 370\nAT97Q 727\n4J274 870\n99J79 834\n72479 387\nT6343 623\n7534K 426\n226A2 194\n3TQQ8 625\nT3T33 492\n8J472 895\nJKKK8 641\n66596 535\n494QA 887\n99333 388\nJQJ55 793\n3A373 179\n85588 948\nAATAA 3\n52827 570\nKKJ33 593\n53A4K 246\nJK3TQ 293\n32442 530\n434A9 842\nKK5K6 154\n49J48 714\n79TA5 199\n7K79K 542\nT9TTT 916\n92994 811\n66676 306\nK5JK5 490\n59AQ6 285\nA5A33 32\n22282 833\n982Q9 181\n88388 63\nQAQQ5 522\n67454 717\n8JT33 855\n84888 997\n2J2TQ 392\nJTT8T 34\n9399Q 457\n687J8 541\n2Q22J 391\n66KK6 29\nKQ2K2 350\n777QQ 652\n2TT33 911\nT7272 250\n3846T 375\nKQ435 502\n44333 96\nQ8Q5Q 177\n6668J 106\n88262 772\nJKAAK 170\n5Q555 235\n7666A 232\nTJ777 123\nK3K87 415\n996Q5 113\nTT555 683\n2992J 707\n67787 226\nAQKJ9 909\nA97KJ 926\nQ2JQ6 109\n6TA94 508\n9K99K 993\nKJK4A 732\n56J28 598\n88544 751\n63577 39\n3T4KK 382\nKA948 747\n3JTTQ 588\nQAQT5 629\nTTTT2 13\nJA5KA 942\n22QTT 114\nA8A6A 186\n3AA7A 832\nK224T 912\n5TKTJ 808\nKJ3T9 947\n3TJ43 55\n25229 4\n7QK25 696\nT9JQ4 126\n88577 288\nJ28K9 187\n75579 621\nKJ8QK 846\nQK4T6 356\nK574Q 478\n9JJJ9 500\n6J343 176\n96666 734\nT8JTJ 159\n66J76 658\n87A4T 308\n66J66 725\nA3Q44 520\nQ668J 946\nJ22TJ 874\nQ6466 719\n325Q6 422\n33T33 486\n4AA2J 171\n44297 512\n92399 569\n552TT 513\n66J69 831\nTKT99 768\n44448 464\nK4A44 787\nJQJQ3 979\n79QQQ 204\n3KKK3 699\n4T458 501\nJ894K 10\n88K8K 260\n77775 58\n7J788 335\n99969 401\n82594 41\nJ98Q8 921\n222JK 443\n6549J 525\n43423 436\n9J949 908\nA8Q95 555\n4A235 394\n57535 236\n22J22 618\n28QA6 326\n74455 792\nAATJA 477\n4AJA4 960\n4649A 264\n2KK55 405\n44J34 809\n6J545 964\n23323 36\nAA266 476\n9Q99Q 620\n2J8T3 940\n99997 851\n62ATT 270\n8JAA8 817\n8A334 127\nK4368 788\n66Q23 148\n672KJ 480\n2K59J 68\n36Q6K 69\n35335 515\nAAA33 321\nK9474 670\n49848 951\n55J55 840\n4T444 320\n4Q89A 78\n6K6J6 66\n4J5TA 131\nT958K 31\n2Q74Q 928\nAQQAQ 71\n27598 169\nJ5995 287\nK4T48 820\nK55K3 532\n22A32 25\n272T4 576\n668J7 440\nQ9QQQ 742\nAQ9TK 929\nJ76TK 968\n9J66A 208\n68QKQ 213\n33373 82\nJA2A2 859\n25K2J 424\nAK33K 247\n2835Q 309\n26262 702\nQK3QQ 234\nKK4K8 818\n8T7TQ 611\n46TJK 953\n9J699 949\nTT44J 757\n92A77 459\n47477 784\nJ9JAQ 245\n65JKT 377\n65J56 991\n6QQ6Q 315\nTJA9J 423\nJ5455 141\n94949 565\nQA26K 447\n99Q99 117\n2J779 824\nKQ9Q4 505\nKKKKA 110\nTT83T 977\nK55J7 826\n44QQJ 795\nQ4Q44 380\n35333 189\n6Q878 774\n66336 746\nT2222 781\n8K888 445\n9964Q 715\n88J8K 104\nJ9999 995\n8Q77T 351\n426K5 5\nK9K9K 581\n9T22T 944\nA45A6 927\n27J27 147\n47474 258\nQ78QQ 983\n77797 389\nQ4Q64 384\nAQKJ3 279\n22Q35 52\n3K3J5 759\n37JQQ 129\nQA688 559\nJ8JJJ 271\n9365T 627\n4K9K2 962\n3TT3T 894\n8Q7JT 328\n2552Q 694\n4K98K 789\n2T555 45\n25469 721\n83TTA 982\n272K2 140\n6T235 816\nKAAKT 580\nTT89T 586\n46A67 920\n63686 959\n8K457 965\nTTJAT 57\n6K6JK 780\n842J9 455\nJKKKQ 654\n77232 175\n4A444 830\n9KA99 302\nQT6TT 324\nQ88Q8 402\n24937 575\nAA96A 357\n98599 799\n97499 917\nJAT87 296\nJ474Q 904\nA88Q8 722\n55223 192\nQ5939 504\n622J2 649\nJKKKK 50\nAJ3Q9 160\n58AJ2 753\n452T7 277\nJATT4 589\n33363 841\n64747 661\n2KK2K 764\nJTJT3 709\nAJJA3 850\nK6T59 48\n929Q7 626\n5A6TK 156\nK26T9 161\nTAAA2 307\n3TTTT 136\nQ9Q5Q 120\nT5468 289\n44454 647\nAJ333 105\nKK63K 521\nJ8388 952\n99T9T 139\n53232 821\n484J3 26\n66J85 790\n2228Q 27\nTT737 212\n55754 470\n5Q666 943\n6J48T 578\n8AA66 941\n33323 215\nA22TA 680\nQQQTQ 755\n62222 882\nA964J 371\n8QQQJ 679\nA99AK 497\n2KJTJ 481\nT8Q6J 479\n799AA 379\n4T672 880\n448T8 607\n66868 329\nK66KT 975\n44664 974\nJ4423 1000\n66922 488\nT335T 115\nT55T3 28\n3A9A3 431\n57575 891\n74AJJ 773\nQAKKQ 534\nA74A7 984\n3KJ33 603\nQA7JK 460\n87728 331\n7TJ7T 354\n99995 432\nA5T25 97\n55T55 242\nT8669 410\nJ8A2A 228\n9T7J7 318\nQ4JQQ 805\n88886 360\n6T75T 552\nQAAQA 310\nT355Q 149\nQQ8QQ 622\n9QQQ9 22\nK9849 257\n9962T 672\n999K9 981\nJJ7T9 640\n55JQ5 230\n99T99 735\nQK23J 599\n4Q774" <> ...}
+```
+
+```elixir
+test_input = """
+32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483
+"""
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"32T3K 765\nT55J5 684\nKK677 28\nKTJJT 220\nQQQJA 483\n"
+```
+
+## Parser
+
+```elixir
+defmodule ParseDay7 do
+  import NimbleParsec
+
+  newline = ascii_char([?\n]) |> optional() |> ignore()
+  ws = ascii_char([?\s]) |> ignore()
+  card = ascii_char([?2..?9, ?A, ?K, ?Q, ?J, ?T]) |> map(:card_to_number)
+  hand = times(card, 5)
+  bid = integer(min: 1)
+
+  hand_with_bid =
+    hand
+    |> tag(:cards)
+    |> concat(ws)
+    |> concat(unwrap_and_tag(bid, :bid))
+    |> concat(newline)
+    |> tag(:hand)
+
+  input = times(hand_with_bid, min: 1)
+
+  defparsec(:hand, hand)
+  defparsec(:bid, bid)
+  defparsec(:input, input)
+
+  def card_to_number(?A), do: 14
+  def card_to_number(?K), do: 13
+  def card_to_number(?Q), do: 12
+  def card_to_number(?J), do: 11
+  def card_to_number(?T), do: 10
+  def card_to_number(char) when char in ?0..?9, do: char - ?0
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, ParseDay7, <<70, 79, 82, 49, 0, 0, 56, ...>>, {:card_to_number, 1}}
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ParseDay7.input(test_input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ [
+   hand: [cards: [3, 2, 10, 3, 13], bid: 765],
+   hand: [cards: [10, 5, 5, 11, 5], bid: 684],
+   hand: [cards: [13, 13, 6, 7, 7], bid: 28],
+   hand: [cards: ~c"\r\n\v\v\n", bid: 220],
+   hand: [cards: [12, 12, 12, 11, 14], bid: 483]
+ ], "", %{}, {6, 49}, 49}
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> PartOne.parse("32T3K 765\nT55J5 684")
+      [%{cards: [3,2,10,3,13], bid: 765}, %{cards: [10,5,5,11,5], bid: 684}]
+  """
+  def parse(input) do
+    {:ok, parsed, "", _context, _col, _line} = ParseDay7.input(input)
+
+    parsed
+    |> Keyword.get_values(:hand)
+    |> Enum.map(&Map.new/1)
+  end
+
+  def process(hands) do
+    hands
+    |> Stream.map(fn %{cards: cards} = hand ->
+      Map.put(hand, :set, cards_to_set(cards))
+    end)
+    |> Enum.sort(fn left, right ->
+      compare_hands(left, right) != :gt
+    end)
+    |> Stream.with_index(1)
+    |> Stream.map(fn {hand, rank} ->
+      hand.bid * rank
+    end)
+    |> Enum.sum()
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+
+  @doc ~S"""
+      iex> PartOne.cards_to_set([3,2,10,1,5])
+      {:high, 10}
+
+      iex> PartOne.cards_to_set([3,2,10,3,14])
+      {:pair, 3}
+      
+      iex> PartOne.cards_to_set([10,5,5,11,5])
+      {:triple, 5}
+
+      iex> PartOne.cards_to_set([13,13,6,7,7])
+      {:two_pair, [7,13]}
+  """
+  def cards_to_set(cards) do
+    counts = cards |> Enum.frequencies()
+    ordered_counts = Enum.map(1..14, &Map.get(counts, &1, 0))
+    multiple_counts = ordered_counts |> Enum.sort() |> Enum.drop_while(&(&1 < 2))
+
+    case multiple_counts do
+      [] ->
+        {:high, Enum.max(cards)}
+
+      [2] ->
+        {:pair, Enum.find_index(ordered_counts, &(&1 == 2)) + 1}
+
+      [2, 2] ->
+        {:two_pair,
+         ordered_counts
+         |> Enum.with_index(1)
+         |> Enum.filter(&(elem(&1, 0) == 2))
+         |> Enum.map(&elem(&1, 1))}
+
+      [2, 3] ->
+        rev_counts = counts |> Map.new(fn {n, count} -> {count, n} end)
+        {:full_house, Enum.map(3..2, &rev_counts[&1])}
+
+      [3] ->
+        {:triple,
+         Enum.find_value(counts, fn {k, v} ->
+           if v == 3, do: k
+         end)}
+
+      [4] ->
+        {:quad,
+         Enum.find_value(counts, fn {k, v} ->
+           if v == 4, do: k
+         end)}
+
+      [5] ->
+        {:penta,
+         Enum.find_value(counts, fn {k, v} ->
+           if v == 5, do: k
+         end)}
+
+      other ->
+        IO.inspect({counts, ordered_counts, other}, label: :not_implemented)
+        :not_implemented
+    end
+  end
+
+  @doc ~S"""
+      iex> PartOne.compare_hands(%{cards: [3,3,3,3,2], set: {:quad, 3}}, %{cards: [2, 14, 14, 14, 14], set: {:quad, 14}})
+      :gt
+  """
+
+  def compare_hands(left, right) do
+    case compare_set_type(left.set, right.set) do
+      :eq ->
+        left.cards
+        |> Enum.zip(right.cards)
+        |> Enum.find_value(fn
+          {n, n} ->
+            nil
+
+          {l, r} ->
+            if l > r, do: :gt, else: :lt
+        end)
+
+      not_eq ->
+        not_eq
+    end
+  end
+
+  @kinds ~w(high pair two_pair triple full_house quad penta)a
+  @ordered_kinds @kinds |> Enum.with_index() |> Map.new()
+
+  def compare_set_type({left, _}, {right, _}) when left == right, do: :eq
+
+  def compare_set_type({left, _}, {right, _}) do
+    if @ordered_kinds[left] < @ordered_kinds[right], do: :lt, else: :gt
+  end
+
+  @doc ~S"""
+      iex> PartOne.compare_set({:high, 1}, {:high, 2})
+      :lt
+
+      iex> PartOne.compare_set({:high, 2}, {:pair, 1})
+      :lt
+
+      iex> PartOne.compare_set({:triple, 9}, {:triple, 8})
+      :gt
+  """
+  def compare_set(left, right)
+
+  for left <- @kinds,
+      right <- @kinds,
+      left_rank = @ordered_kinds[left],
+      right_rank = @ordered_kinds[right] do
+    rank_cmp =
+      cond do
+        left_rank < right_rank -> :lt
+        left_rank > right_rank -> :gt
+        true -> :eq
+      end
+
+    if rank_cmp == :eq do
+      def compare_set({unquote(left), l}, {unquote(right), r}) when l < r, do: :lt
+      def compare_set({unquote(left), l}, {unquote(right), r}) when l == r, do: :eq
+      def compare_set({unquote(left), l}, {unquote(right), r}) when l > r, do: :gt
+    else
+      def compare_set({unquote(left), _n}, {unquote(right), _m}), do: unquote(rank_cmp)
+    end
+  end
+
+  def set_to_rank(_set), do: 0
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 35, ...>>, {:set_to_rank, 1}}
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartOne.solve(test_input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+6440
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+249483956
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    32T3K 765
+    T55J5 684
+    KK677 28
+    KTJJT 220
+    QQQJA 483
+    """
+    test "calculates hand winnings" do
+      assert PartOne.solve(@test_input) == 6440
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+**********..........
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+18 doctests, 2 tests, 0 failures, 10 skipped
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 20, skipped: 10, failures: 0, excluded: 0}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    32T3K 765
+    T55J5 684
+    KK677 28
+    KTJJT 220
+    QQQJA 483
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":12804,"stamp":{"token":"XCP.fK62JCUa3yzp0CYyueNEgLhcJyG9VM3V_rkOpbJ3c-M7uadMEmBqd7_KLlEWbolY8ZeLwScbA7Cka_GlJ6Lf0KdMKHklk8uA6tmfH_u__6tkObyMDyw","version":2}} -->
