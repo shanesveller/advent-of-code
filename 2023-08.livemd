@@ -46,15 +46,18 @@ defmodule PartOne do
     {dirs, conns}
   end
 
-  def process({dirs, conns}) do
-    Enum.reduce_while(dirs, {0, "AAA"}, fn
-      _dir, {steps, "ZZZ"} ->
-        {:halt, steps}
-
+  def process({dirs, conns}, starter \\ "AAA") do
+    Enum.reduce_while(dirs, {0, starter}, fn
       dir, {steps, node} ->
+        steps = steps + 1
         {left, right} = Map.fetch!(conns, node)
         next = if dir == :left, do: left, else: right
-        {:cont, {steps + 1, next}}
+
+        if String.ends_with?(next, "Z") do
+          {:halt, steps}
+        else
+          {:cont, {steps, next}}
+        end
     end)
   end
 
@@ -67,7 +70,7 @@ defmodule PartOne do
   def connection_graph(conns) do
     Map.new(conns, fn line ->
       [node, left, right] =
-        Regex.run(~r/([A-Z]+) = \(([A-Z]+), ([A-Z]+)\)/, line, capture: :all_but_first)
+        Regex.run(~r/([0-9A-Z]+) = \(([0-9A-Z]+), ([0-9A-Z]+)\)/, line, capture: :all_but_first)
 
       {node, {left, right}}
     end)
@@ -88,15 +91,22 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, PartOne, <<70, 79, 82, 49, 0, 0, 17, ...>>, {:direction_template, 1}}
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 18, ...>>, {:direction_template, 1}}
 ```
 
 ```elixir
 defmodule PartTwo do
   import PartOne, only: [parse: 1]
 
-  def process(_input) do
-    ""
+  def process({dirs, conns}) do
+    starters = starter_nodes(conns)
+
+    [acc | lengths] =
+      Enum.map(starters, &PartOne.process({dirs, conns}, &1))
+
+    Enum.reduce(lengths, acc, fn left, right ->
+      left * div(right, Integer.gcd(left, right))
+    end)
   end
 
   def solve(input) do
@@ -104,13 +114,25 @@ defmodule PartTwo do
     |> parse()
     |> process()
   end
+
+  def starter_nodes(conns) do
+    conns
+    |> Map.keys()
+    |> Enum.filter(&String.ends_with?(&1, "A"))
+    |> Enum.sort()
+  end
+
+  def take_step(node, dir, conns) do
+    {left, right} = Map.fetch!(conns, node)
+    if dir == :left, do: left, else: right
+  end
 end
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:take_step, 3}}
 ```
 
 ## Solutions
@@ -127,6 +149,12 @@ PartOne.solve(input)
 
 ```elixir
 PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+14935034899483
 ```
 
 <!-- livebook:{"branch_parent_index":1} -->
@@ -164,15 +192,23 @@ end
 defmodule PartTwoTest do
   use ExUnit.Case, async: true
 
-  @moduletag :skip
-
   doctest PartOne
 
   describe "Part Two" do
     @test_input """
+    LR
+
+    11A = (11B, XXX)
+    11B = (XXX, 11Z)
+    11Z = (11B, XXX)
+    22A = (22B, XXX)
+    22B = (22C, 22C)
+    22C = (22Z, 22Z)
+    22Z = (22B, 22B)
+    XXX = (XXX, XXX)
     """
-    test "TODO" do
-      assert PartTwo.solve(@test_input) == false
+    test "counts parallel steps" do
+      assert PartTwo.solve(@test_input) == 6
     end
   end
 end
@@ -183,9 +219,9 @@ ExUnit.run()
 <!-- livebook:{"output":true} -->
 
 ```
-**..
+....
 Finished in 0.00 seconds (0.00s async, 0.00s sync)
-2 doctests, 2 tests, 0 failures, 2 skipped
+2 doctests, 2 tests, 0 failures
 
 Randomized with seed 12345
 ```
@@ -193,12 +229,8 @@ Randomized with seed 12345
 <!-- livebook:{"output":true} -->
 
 ```
-%{total: 4, skipped: 2, failures: 0, excluded: 0}
+%{total: 4, skipped: 0, failures: 0, excluded: 0}
 ```
-
-<!-- livebook:{"branch_parent_index":0} -->
-
-## Golfing
 
 ## Benchmarks
 
@@ -211,6 +243,15 @@ Benchee.run(
   inputs: %{
     input: input,
     test_input: """
+    RL
+
+    AAA = (BBB, CCC)
+    BBB = (DDD, EEE)
+    CCC = (ZZZ, GGG)
+    DDD = (DDD, DDD)
+    EEE = (EEE, EEE)
+    GGG = (GGG, GGG)
+    ZZZ = (ZZZ, ZZZ)
     """
   },
   warmup: 2,
@@ -220,10 +261,428 @@ Benchee.run(
 )
 ```
 
-<!-- livebook:{"branch_parent_index":1} -->
+<!-- livebook:{"output":true} -->
 
-## Failures
+```
+Operating System: Linux
+CPU Information: AMD Ryzen 9 5950X 16-Core Processor
+Number of Available Cores: 32
+Available memory: 62.71 GB
+Elixir 1.15.7
+Erlang 26.1.2
 
-Sometimes my ideas don't work out.
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 3 s
+memory time: 3 s
+reduction time: 3 s
+parallel: 1
+inputs: input, test_input
+Estimated total run time: 44 s
 
-<!-- livebook:{"offset":8093,"stamp":{"token":"XCP.hDeTqN3h3IDayAg-XeTqBWtAdHhgiWYmNG_IICaVPZmUKHdO7oHzd-hGPBitynFM0in1sQdYCiFv_GsO3TzDV5F9f0cv0upMOtq3gCGCMcDtZ3QLVAE","version":2}} -->
+Benchmarking PartOne with input input ...
+Benchmarking PartOne with input test_input ...
+Benchmarking PartTwo with input input ...
+Benchmarking PartTwo with input test_input ...
+
+##### With input input #####
+Name              ips        average  deviation         median         99th %
+PartOne        507.38        1.97 ms     ±3.52%        1.94 ms        2.20 ms
+PartTwo        119.86        8.34 ms     ±0.90%        8.32 ms        8.56 ms
+
+Comparison: 
+PartOne        507.38
+PartTwo        119.86 - 4.23x slower +6.37 ms
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         1.71 MB
+PartTwo         9.40 MB - 5.51x memory usage +7.69 MB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name            average  deviation         median         99th %
+PartOne        134.25 K     ±0.01%       134.24 K       134.28 K
+PartTwo        725.00 K     ±0.00%       725.00 K       725.05 K
+
+Comparison: 
+PartOne        134.24 K
+PartTwo        725.00 K - 5.40x reduction count +590.75 K
+
+##### With input test_input #####
+Name              ips        average  deviation         median         99th %
+PartOne      143.18 K        6.98 μs    ±32.09%        6.88 μs       10.01 μs
+PartTwo      137.10 K        7.29 μs    ±27.19%        7.13 μs       12.50 μs
+
+Comparison: 
+PartOne      143.18 K
+PartTwo      137.10 K - 1.04x slower +0.31 μs
+
+Memory usage statistics:
+
+Name       Memory usage
+PartOne         3.24 KB
+PartTwo         3.43 KB - 1.06x memory usage +0.188 KB
+
+**All measurements for memory usage were the same**
+
+Reduction count statistics:
+
+Name    Reduction count
+PartOne             245
+PartTwo             291 - 1.19x reduction count +46
+
+**All measurements for reduction count were the same**
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %{
+    erlang: "26.1.2",
+    os: :Linux,
+    elixir: "1.15.7",
+    available_memory: "62.71 GB",
+    cpu_speed: "AMD Ryzen 9 5950X 16-Core Processor",
+    num_cores: 32
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 3000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 3000000000.0,
+    reduction_time: 3000000000.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: [
+      {"input",
+       "LRRRLRLLLLLLLRLRLRRLRRRLRRLRRRLRRLRRRLLRRRLRRLRLRRRLRRLRRRLLRLLRRRLRRRLRLLRLRLRRRLRRLRRLRRLRLRRRLRRLRRRLLRLLRLLRRLRLLRLRRLRLRLRRLRRRLLLRRLRRRLLRRLRLRLRRRLRLRRRLLRLLLRRRLLLRRLLRLLRRLLRLRRRLRLRRLRRLLRRLRLLRLRRRLRRRLRLRRRLRLRLRRLRLRRRLRRRLRRRLRRLRRLRRRLLRLRLLRLLRRRR\n\nHVX = (SCS, XQN)\nDMK = (JKL, JKL)\nFDF = (XHL, RMM)\nJTK = (SVN, DVP)\nQCF = (FCH, FCH)\nTCG = (VMS, SDL)\nJJP = (FQJ, RLT)\nDRP = (RMJ, RMJ)\nVKF = (XQB, VBX)\nHRS = (BXK, DPM)\nFHH = (FBF, TNX)\nHDJ = (MBH, QRM)\nTMG = (LJJ, JVM)\nKJK = (GXP, FHS)\nLKV = (VCV, JDP)\nCVT = (MBM, BSQ)\nRSD = (BFH, BPP)\nKJG = (TMB, DMC)\nDRH = (BFS, NCJ)\nGRF = (MJL, TXX)\nJVA = (XKG, RCL)\nGFK = (NJF, NPR)\nCQJ = (GVM, KKF)\nTJC = (FNR, TFH)\nBJP = (NMJ, JMX)\nDRX = (MRR, QDL)\nQFV = (TLM, XQM)\nXQF = (NGF, NDC)\nGDF = (TCV, PTP)\nRHQ = (RGT, PXT)\nNBR = (RRV, NCG)\nPVF = (QPL, KRG)\nCSQ = (TSC, GRF)\nVMJ = (VTK, HRS)\nBKH = (RPF, JGX)\nGMM = (SRN, MSQ)\nNLK = (BHP, TVR)\nJDS = (LBV, TBN)\nFQJ = (FMG, NRV)\nJNG = (LTX, KHH)\nDNM = (QPL, KRG)\nBCJ = (LXV, BKQ)\nLHD = (SGJ, JBX)\nNMJ = (GPT, BCL)\nDNJ = (DFT, BXT)\nRDX = (QCX, VBF)\nVMS = (HGR, MLS)\nCSR = (PMC, BPT)\nLFT = (FXN, SRJ)\nJRK = (GDC, KVK)\nBMB = (LJJ, JVM)\nJMD = (JXX, JDS)\nGPS = (LQF, QXR)\nGQF = (VFK, GDR)\nGGB = (MBP, RMV)\nNRR = (CDX, MDJ)\nVDM = (QRJ, LDJ)\nFHM = (GFK, DSM)\nXQM = (QSH, SXJ)\nPSG = (RMP, CLT)\nSPH = (VQQ, QTG)\nXDB = (NSX, HDJ)\nGDC = (SBL, XCL)\nQBH = (HGS, KMR)\nJDK = (PXR, LFT)\nVBX = (DPL, VNL)\nGXQ = (LFP, BXD)\nRTT = (DHV, GDM)\nRRV = (KRF, PLS)\nXLA = (XMF, TRG)\nLTP = (FNR, TFH)\nSRP = (SNR, DLD)\nJVV = (BCN, QXH)\nJKM = (VCS, SQB)\nDXX = (SDN, VXM)\nXCV = (JBX, SGJ)\nVXL = (XJM, HKT)\nDGB = (RDQ, HGM)\nSLT = (GDL, NQV)\nXHH = (PQN, DNP)\nFBK = (GMM, RHM)\nPCG = (TCV, PTP)\nGPT = (BCJ, NQH)\nRLK = (TMG, BMB)\nDSJ = (JKP, PKN)\nXXJ = (VHX, RNJ)\nLPS = (FBQ, NFG)\nTMS = (KTV, VLT)\nFXN = (CLC, HJJ)\nGSV = (XSM, PPQ)\nPQN = (XXJ, FJP)\nHKX = (JSQ, RFS)\nTRS = (BRL, FLC)\nCPK = (QVN, PRR)\nVFK = (KRH, LFV)\nXVJ = (MQK, LRG)\nBXT = (DMQ, JMD)\nCDH = (VQJ, CLR)\nFLP = (VPN, VBT)\nKDF = (LPD, KMS)\nHXH = (DNQ, CDL)\nLLH = (SJD, JXB)\nPKN = (KBD, RXT)\nMJT = (FCH, CGS)\nHMN = (PNK, QRK)\nTXR = (QFV, DJM)\nKNF = (HST, SLT)\nXHL = (RXM, HXF)\nVCM = (QBH, QHS)\nNXD = (CXH, TKV)\nBPP = (LBD, TBR)\nTKX = (LPQ, JNG)\nSVM = (LHN, PVJ)\nBGH = (KNS, VBG)\nHHX = (QJP, QMC)\nCCN = (GSV, PHX)\nTNH = (TRP, JXT)\nLJM = (PMV, BGR)\nTJX = (XNM, GBF)\nLCD = (XQF, KRP)\nPTP = (CSR, SDG)\nRCL = (BMJ, RMH)\nDVQ = (JCJ, SCX)\nDJM = (XQM, TLM)\nTVR = (VLX, XQZ)\nKXH = (DHV, GDM)\nHFB = (NQB, LKZ)\nLBV = (MDV, LKP)\nXMF = (DXS, JRM)\nDSG = (XFF, HMN)\nVNL = (FQD, RRC)\nDPB = (TRP, JXT)\nHHR = (DVT, DTJ)\nCLR = (NXD, XPH)\nQSF = (FTV, LLH)\nJRM = (LPS, VGL)\nQHK = (DRP, DRP)\nGKJ = (QQN, JGC)\nBKQ = (FBK, RJX)\nVBG = (GCV, DHH)\nJGC = (NFF, RHQ)\nKBD = (TFJ, XBN)\nQHG = (JMQ, XGL)\nDFJ = (MMB, DRX)\nHLJ = (GHG, HXG)\nKKF = (TKX, XTM)\nLXP = (GBF, XNM)\nKKG = (TJX, LXP)\nBGR = (PFQ, FSG)\nBTS = (BCN, QXH)\nBXK = (VKL, FSX)\nJBS = (PXR, LFT)\nKHF = (GBD, FCP)\nCLK = (FHM, GVG)\nNPR = (JTM, VDR)\nXGL = (DMK, JHG)\nSFV = (KXH, RTT)\nDSM = (NJF, NPR)\nDKH = (BSQ, MBM)\nFTX = (LXP, TJX)\nPLF = (DDS, LXJ)\nJTB = (HLJ, DGS)\nTJB = (QHG, LDQ)\nRFC = (NPF, BXL)\nMBH = (KFQ, DMT)\nLCM = (DGV, HKX)\nDLM = (GQD, KGH)\nGSM = (QDQ, RHN)\nPKV = (DTJ, DVT)\nHNC = (PHX, GSV)\nJBT = (DSR, DSL)\nRMV = (XMT, GND)\nQRK = (DFH, FFT)\nQDQ = (RJC, FTF)\nMFX = (DPB, TNH)\nLGS = (JVF, JRK)\nJFR = (QLV, JQN)\nBXL = (LQH, JFR)\nGDM = (DTB, GXR)\nPTG = (XVJ, MNT)\nHGS = (CGM, LSS)\nLDQ = (JMQ, XGL)\nLPR = (PQN, DNP)\nTRG = (JRM, DXS)\nVHX = (JTQ, BKP)\nQPP = (LFP, BXD)\nNNC = (RFQ, RDT)\nPJL = (NGD, SXQ)\nJQN = (PJL, CTJ)\nJGH = (LRQ, JNN)\nTRP = (PJR, SSS)\nFTD = (HHR, PKV)\nGXR = (VDL, VCM)\nTXT = (HNC, CCN)\nSQB = (LPR, XHH)\nNLH = (QLR, LXH)\nRCR = (DNQ, CDL)\nCGM = (TJB, GCM)\nDGS = (GHG, HXG)\nTMB = (GGQ, MSB)\nVJV = (PSR, BPR)\nNNN = (LQF, QXR)\nFNK = (PSG, HTG)\nNCJ = (KJK, FSJ)\nGRC = (SQP, NRR)\nHQD = (LHN, PVJ)\nNBL = (PNT, RSP)\nJLF = (BHP, BHP)\nHTG = (CLT, RMP)\nQQN = (RHQ, NFF)\nNRV = (LKV, FLQ)\nRBV = (CMQ, GBG)\nZZZ = (SCX, JCJ)\nNGF = (QFD, HVX)\nXPH = (CXH, TKV)\nCBR = (HTD, THC)\nBCL = (NQH, BCJ)\nSSS = (GMD, HBV)\nGHL = (JTB, MHT)\nQSH = (RRS, HGX)\nCVS = (JKP, PKN)\nQNK = (CVT, DKH)\nJBX = (LSF, HNG)\nHFQ = (DDT, QNK)\nVQP = (BLP, PPF)\nRGD = " <> ...},
+      {"test_input",
+       "RL\n\nAAA = (BBB, CCC)\nBBB = (DDD, EEE)\nCCC = (ZZZ, GGG)\nDDD = (DDD, DDD)\nEEE = (EEE, EEE)\nGGG = (GGG, GGG)\nZZZ = (ZZZ, ZZZ)\n"}
+    ],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "input",
+      input: "LRRRLRLLLLLLLRLRLRRLRRRLRRLRRRLRRLRRRLLRRRLRRLRLRRRLRRLRRRLLRLLRRRLRRRLRLLRLRLRRRLRRLRRLRRLRLRRRLRRLRRRLLRLLRLLRRLRLLRLRRLRLRLRRLRRRLLLRRLRRRLLRRLRLRLRRRLRLRRRLLRLLLRRRLLLRRLLRLLRRLLRLRRRLRLRRLRRLLRRLRLLRLRRRLRRRLRLRRRLRLRLRRLRLRRRLRRRLRRRLRRLRRLRRRLLRLRLLRLLRRRR\n\nHVX = (SCS, XQN)\nDMK = (JKL, JKL)\nFDF = (XHL, RMM)\nJTK = (SVN, DVP)\nQCF = (FCH, FCH)\nTCG = (VMS, SDL)\nJJP = (FQJ, RLT)\nDRP = (RMJ, RMJ)\nVKF = (XQB, VBX)\nHRS = (BXK, DPM)\nFHH = (FBF, TNX)\nHDJ = (MBH, QRM)\nTMG = (LJJ, JVM)\nKJK = (GXP, FHS)\nLKV = (VCV, JDP)\nCVT = (MBM, BSQ)\nRSD = (BFH, BPP)\nKJG = (TMB, DMC)\nDRH = (BFS, NCJ)\nGRF = (MJL, TXX)\nJVA = (XKG, RCL)\nGFK = (NJF, NPR)\nCQJ = (GVM, KKF)\nTJC = (FNR, TFH)\nBJP = (NMJ, JMX)\nDRX = (MRR, QDL)\nQFV = (TLM, XQM)\nXQF = (NGF, NDC)\nGDF = (TCV, PTP)\nRHQ = (RGT, PXT)\nNBR = (RRV, NCG)\nPVF = (QPL, KRG)\nCSQ = (TSC, GRF)\nVMJ = (VTK, HRS)\nBKH = (RPF, JGX)\nGMM = (SRN, MSQ)\nNLK = (BHP, TVR)\nJDS = (LBV, TBN)\nFQJ = (FMG, NRV)\nJNG = (LTX, KHH)\nDNM = (QPL, KRG)\nBCJ = (LXV, BKQ)\nLHD = (SGJ, JBX)\nNMJ = (GPT, BCL)\nDNJ = (DFT, BXT)\nRDX = (QCX, VBF)\nVMS = (HGR, MLS)\nCSR = (PMC, BPT)\nLFT = (FXN, SRJ)\nJRK = (GDC, KVK)\nBMB = (LJJ, JVM)\nJMD = (JXX, JDS)\nGPS = (LQF, QXR)\nGQF = (VFK, GDR)\nGGB = (MBP, RMV)\nNRR = (CDX, MDJ)\nVDM = (QRJ, LDJ)\nFHM = (GFK, DSM)\nXQM = (QSH, SXJ)\nPSG = (RMP, CLT)\nSPH = (VQQ, QTG)\nXDB = (NSX, HDJ)\nGDC = (SBL, XCL)\nQBH = (HGS, KMR)\nJDK = (PXR, LFT)\nVBX = (DPL, VNL)\nGXQ = (LFP, BXD)\nRTT = (DHV, GDM)\nRRV = (KRF, PLS)\nXLA = (XMF, TRG)\nLTP = (FNR, TFH)\nSRP = (SNR, DLD)\nJVV = (BCN, QXH)\nJKM = (VCS, SQB)\nDXX = (SDN, VXM)\nXCV = (JBX, SGJ)\nVXL = (XJM, HKT)\nDGB = (RDQ, HGM)\nSLT = (GDL, NQV)\nXHH = (PQN, DNP)\nFBK = (GMM, RHM)\nPCG = (TCV, PTP)\nGPT = (BCJ, NQH)\nRLK = (TMG, BMB)\nDSJ = (JKP, PKN)\nXXJ = (VHX, RNJ)\nLPS = (FBQ, NFG)\nTMS = (KTV, VLT)\nFXN = (CLC, HJJ)\nGSV = (XSM, PPQ)\nPQN = (XXJ, FJP)\nHKX = (JSQ, RFS)\nTRS = (BRL, FLC)\nCPK = (QVN, PRR)\nVFK = (KRH, LFV)\nXVJ = (MQK, LRG)\nBXT = (DMQ, JMD)\nCDH = (VQJ, CLR)\nFLP = (VPN, VBT)\nKDF = (LPD, KMS)\nHXH = (DNQ, CDL)\nLLH = (SJD, JXB)\nPKN = (KBD, RXT)\nMJT = (FCH, CGS)\nHMN = (PNK, QRK)\nTXR = (QFV, DJM)\nKNF = (HST, SLT)\nXHL = (RXM, HXF)\nVCM = (QBH, QHS)\nNXD = (CXH, TKV)\nBPP = (LBD, TBR)\nTKX = (LPQ, JNG)\nSVM = (LHN, PVJ)\nBGH = (KNS, VBG)\nHHX = (QJP, QMC)\nCCN = (GSV, PHX)\nTNH = (TRP, JXT)\nLJM = (PMV, BGR)\nTJX = (XNM, GBF)\nLCD = (XQF, KRP)\nPTP = (CSR, SDG)\nRCL = (BMJ, RMH)\nDVQ = (JCJ, SCX)\nDJM = (XQM, TLM)\nTVR = (VLX, XQZ)\nKXH = (DHV, GDM)\nHFB = (NQB, LKZ)\nLBV = (MDV, LKP)\nXMF = (DXS, JRM)\nDSG = (XFF, HMN)\nVNL = (FQD, RRC)\nDPB = (TRP, JXT)\nHHR = (DVT, DTJ)\nCLR = (NXD, XPH)\nQSF = (FTV, LLH)\nJRM = (LPS, VGL)\nQHK = (DRP, DRP)\nGKJ = (QQN, JGC)\nBKQ = (FBK, RJX)\nVBG = (GCV, DHH)\nJGC = (NFF, RHQ)\nKBD = (TFJ, XBN)\nQHG = (JMQ, XGL)\nDFJ = (MMB, DRX)\nHLJ = (GHG, HXG)\nKKF = (TKX, XTM)\nLXP = (GBF, XNM)\nKKG = (TJX, LXP)\nBGR = (PFQ, FSG)\nBTS = (BCN, QXH)\nBXK = (VKL, FSX)\nJBS = (PXR, LFT)\nKHF = (GBD, FCP)\nCLK = (FHM, GVG)\nNPR = (JTM, VDR)\nXGL = (DMK, JHG)\nSFV = (KXH, RTT)\nDSM = (NJF, NPR)\nDKH = (BSQ, MBM)\nFTX = (LXP, TJX)\nPLF = (DDS, LXJ)\nJTB = (HLJ, DGS)\nTJB = (QHG, LDQ)\nRFC = (NPF, BXL)\nMBH = (KFQ, DMT)\nLCM = (DGV, HKX)\nDLM = (GQD, KGH)\nGSM = (QDQ, RHN)\nPKV = (DTJ, DVT)\nHNC = (PHX, GSV)\nJBT = (DSR, DSL)\nRMV = (XMT, GND)\nQRK = (DFH, FFT)\nQDQ = (RJC, FTF)\nMFX = (DPB, TNH)\nLGS = (JVF, JRK)\nJFR = (QLV, JQN)\nBXL = (LQH, JFR)\nGDM = (DTB, GXR)\nPTG = (XVJ, MNT)\nHGS = (CGM, LSS)\nLDQ = (JMQ, XGL)\nLPR = (PQN, DNP)\nTRG = (JRM, DXS)\nVHX = (JTQ, BKP)\nQPP = (LFP, BXD)\nNNC = (RFQ, RDT)\nPJL = (NGD, SXQ)\nJQN = (PJL, CTJ)\nJGH = (LRQ, JNN)\nTRP = (PJR, SSS)\nFTD = (HHR, PKV)\nGXR = (VDL, VCM)\nTXT = (HNC, CCN)\nSQB = (LPR, XHH)\nNLH = (QLR, LXH)\nRCR = (DNQ, CDL)\nCGM = (TJB, GCM)\nDGS = (GHG, HXG)\nTMB = (GGQ, MSB)\nVJV = (PSR, BPR)\nNNN = (LQF, QXR)\nFNK = (PSG, HTG)\nNCJ = (KJK, FSJ)\nGRC = (SQP, NRR)\nHQD = (LHN, PVJ)\nNBL = (PNT, RSP)\nJLF = (BHP, BHP)\nHTG = (CLT, RMP)\nQQN = (RHQ, NFF)\nNRV = (LKV, FLQ)\nRBV = (CMQ, GBG)\nZZZ = (SCX, JCJ)\nNGF = (QFD, HVX)\nXPH = (CXH, TKV)\nCBR = (HTD, THC)\nBCL = (NQH, BCJ)\nSSS = (GMD, HBV)\nGHL = (JTB, MHT)\nQSH = (RRS, HGX)\nCVS = (JKP, PKN)\nQNK = (CVT, DKH)\nJBX = (LSF, HNG)\nHFQ = (DDT, QNK)\nVQP = (BLP, PPF)\nRGD = " <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1970913.4270696451,
+          ips: 507.3789575256993,
+          std_dev: 69451.92683105313,
+          std_dev_ratio: 0.035238446233690886,
+          std_dev_ips: 17.87924611487549,
+          median: 1939218.0,
+          percentiles: %{50 => 1939218.0, 99 => 2199180.6},
+          mode: [1926779, 1923808, 1940549],
+          minimum: 1896069,
+          maximum: 2326964,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1522
+        },
+        samples: [2023690, 1919518, 1924678, 1943659, 1904498, 1905658, 1908129, 1932098, 2100201,
+         1938019, 1938878, 1934849, 2068140, 1933439, 1935328, 1949639, 2044970, 1927308, 1928388,
+         1933768, 2067531, 1926138, 1925569, 1931148, 2059251, 1970019, 1940808, 1926079, 2059570,
+         1924068, 1923779, 1936648, 2066061, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1789304.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 1789304.0,
+          percentiles: %{50 => 1789304.0, 99 => 1789304.0},
+          mode: 1789304,
+          minimum: 1789304,
+          maximum: 1789304,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1355
+        },
+        samples: [1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304,
+         1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304,
+         1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304, 1789304,
+         1789304, 1789304, 1789304, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 134246.02653061223,
+          ips: nil,
+          std_dev: 12.509382872099959,
+          std_dev_ratio: 9.318251865910857e-5,
+          std_dev_ips: nil,
+          median: 134244.0,
+          percentiles: %{50 => 134244.0, 99 => 134285.0},
+          mode: 134238,
+          minimum: 134221,
+          maximum: 134321,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 1470
+        },
+        samples: [134263, 134232, 134248, 134230, 134264, 134231, 134240, 134243, 134246, 134234,
+         134226, 134265, 134243, 134234, 134231, 134241, 134233, 134225, 134258, 134235, 134227,
+         134231, 134243, 134236, 134255, 134259, 134246, 134245, 134253, 134253, 134247, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "input",
+      input: "LRRRLRLLLLLLLRLRLRRLRRRLRRLRRRLRRLRRRLLRRRLRRLRLRRRLRRLRRRLLRLLRRRLRRRLRLLRLRLRRRLRRLRRLRRLRLRRRLRRLRRRLLRLLRLLRRLRLLRLRRLRLRLRRLRRRLLLRRLRRRLLRRLRLRLRRRLRLRRRLLRLLLRRRLLLRRLLRLLRRLLRLRRRLRLRRLRRLLRRLRLLRLRRRLRRRLRLRRRLRLRLRRLRLRRRLRRRLRRRLRRLRRLRRRLLRLRLLRLLRRRR\n\nHVX = (SCS, XQN)\nDMK = (JKL, JKL)\nFDF = (XHL, RMM)\nJTK = (SVN, DVP)\nQCF = (FCH, FCH)\nTCG = (VMS, SDL)\nJJP = (FQJ, RLT)\nDRP = (RMJ, RMJ)\nVKF = (XQB, VBX)\nHRS = (BXK, DPM)\nFHH = (FBF, TNX)\nHDJ = (MBH, QRM)\nTMG = (LJJ, JVM)\nKJK = (GXP, FHS)\nLKV = (VCV, JDP)\nCVT = (MBM, BSQ)\nRSD = (BFH, BPP)\nKJG = (TMB, DMC)\nDRH = (BFS, NCJ)\nGRF = (MJL, TXX)\nJVA = (XKG, RCL)\nGFK = (NJF, NPR)\nCQJ = (GVM, KKF)\nTJC = (FNR, TFH)\nBJP = (NMJ, JMX)\nDRX = (MRR, QDL)\nQFV = (TLM, XQM)\nXQF = (NGF, NDC)\nGDF = (TCV, PTP)\nRHQ = (RGT, PXT)\nNBR = (RRV, NCG)\nPVF = (QPL, KRG)\nCSQ = (TSC, GRF)\nVMJ = (VTK, HRS)\nBKH = (RPF, JGX)\nGMM = (SRN, MSQ)\nNLK = (BHP, TVR)\nJDS = (LBV, TBN)\nFQJ = (FMG, NRV)\nJNG = (LTX, KHH)\nDNM = (QPL, KRG)\nBCJ = (LXV, BKQ)\nLHD = (SGJ, JBX)\nNMJ = (GPT, BCL)\nDNJ = (DFT, BXT)\nRDX = (QCX, VBF)\nVMS = (HGR, MLS)\nCSR = (PMC, BPT)\nLFT = (FXN, SRJ)\nJRK = (GDC, KVK)\nBMB = (LJJ, JVM)\nJMD = (JXX, JDS)\nGPS = (LQF, QXR)\nGQF = (VFK, GDR)\nGGB = (MBP, RMV)\nNRR = (CDX, MDJ)\nVDM = (QRJ, LDJ)\nFHM = (GFK, DSM)\nXQM = (QSH, SXJ)\nPSG = (RMP, CLT)\nSPH = (VQQ, QTG)\nXDB = (NSX, HDJ)\nGDC = (SBL, XCL)\nQBH = (HGS, KMR)\nJDK = (PXR, LFT)\nVBX = (DPL, VNL)\nGXQ = (LFP, BXD)\nRTT = (DHV, GDM)\nRRV = (KRF, PLS)\nXLA = (XMF, TRG)\nLTP = (FNR, TFH)\nSRP = (SNR, DLD)\nJVV = (BCN, QXH)\nJKM = (VCS, SQB)\nDXX = (SDN, VXM)\nXCV = (JBX, SGJ)\nVXL = (XJM, HKT)\nDGB = (RDQ, HGM)\nSLT = (GDL, NQV)\nXHH = (PQN, DNP)\nFBK = (GMM, RHM)\nPCG = (TCV, PTP)\nGPT = (BCJ, NQH)\nRLK = (TMG, BMB)\nDSJ = (JKP, PKN)\nXXJ = (VHX, RNJ)\nLPS = (FBQ, NFG)\nTMS = (KTV, VLT)\nFXN = (CLC, HJJ)\nGSV = (XSM, PPQ)\nPQN = (XXJ, FJP)\nHKX = (JSQ, RFS)\nTRS = (BRL, FLC)\nCPK = (QVN, PRR)\nVFK = (KRH, LFV)\nXVJ = (MQK, LRG)\nBXT = (DMQ, JMD)\nCDH = (VQJ, CLR)\nFLP = (VPN, VBT)\nKDF = (LPD, KMS)\nHXH = (DNQ, CDL)\nLLH = (SJD, JXB)\nPKN = (KBD, RXT)\nMJT = (FCH, CGS)\nHMN = (PNK, QRK)\nTXR = (QFV, DJM)\nKNF = (HST, SLT)\nXHL = (RXM, HXF)\nVCM = (QBH, QHS)\nNXD = (CXH, TKV)\nBPP = (LBD, TBR)\nTKX = (LPQ, JNG)\nSVM = (LHN, PVJ)\nBGH = (KNS, VBG)\nHHX = (QJP, QMC)\nCCN = (GSV, PHX)\nTNH = (TRP, JXT)\nLJM = (PMV, BGR)\nTJX = (XNM, GBF)\nLCD = (XQF, KRP)\nPTP = (CSR, SDG)\nRCL = (BMJ, RMH)\nDVQ = (JCJ, SCX)\nDJM = (XQM, TLM)\nTVR = (VLX, XQZ)\nKXH = (DHV, GDM)\nHFB = (NQB, LKZ)\nLBV = (MDV, LKP)\nXMF = (DXS, JRM)\nDSG = (XFF, HMN)\nVNL = (FQD, RRC)\nDPB = (TRP, JXT)\nHHR = (DVT, DTJ)\nCLR = (NXD, XPH)\nQSF = (FTV, LLH)\nJRM = (LPS, VGL)\nQHK = (DRP, DRP)\nGKJ = (QQN, JGC)\nBKQ = (FBK, RJX)\nVBG = (GCV, DHH)\nJGC = (NFF, RHQ)\nKBD = (TFJ, XBN)\nQHG = (JMQ, XGL)\nDFJ = (MMB, DRX)\nHLJ = (GHG, HXG)\nKKF = (TKX, XTM)\nLXP = (GBF, XNM)\nKKG = (TJX, LXP)\nBGR = (PFQ, FSG)\nBTS = (BCN, QXH)\nBXK = (VKL, FSX)\nJBS = (PXR, LFT)\nKHF = (GBD, FCP)\nCLK = (FHM, GVG)\nNPR = (JTM, VDR)\nXGL = (DMK, JHG)\nSFV = (KXH, RTT)\nDSM = (NJF, NPR)\nDKH = (BSQ, MBM)\nFTX = (LXP, TJX)\nPLF = (DDS, LXJ)\nJTB = (HLJ, DGS)\nTJB = (QHG, LDQ)\nRFC = (NPF, BXL)\nMBH = (KFQ, DMT)\nLCM = (DGV, HKX)\nDLM = (GQD, KGH)\nGSM = (QDQ, RHN)\nPKV = (DTJ, DVT)\nHNC = (PHX, GSV)\nJBT = (DSR, DSL)\nRMV = (XMT, GND)\nQRK = (DFH, FFT)\nQDQ = (RJC, FTF)\nMFX = (DPB, TNH)\nLGS = (JVF, JRK)\nJFR = (QLV, JQN)\nBXL = (LQH, JFR)\nGDM = (DTB, GXR)\nPTG = (XVJ, MNT)\nHGS = (CGM, LSS)\nLDQ = (JMQ, XGL)\nLPR = (PQN, DNP)\nTRG = (JRM, DXS)\nVHX = (JTQ, BKP)\nQPP = (LFP, BXD)\nNNC = (RFQ, RDT)\nPJL = (NGD, SXQ)\nJQN = (PJL, CTJ)\nJGH = (LRQ, JNN)\nTRP = (PJR, SSS)\nFTD = (HHR, PKV)\nGXR = (VDL, VCM)\nTXT = (HNC, CCN)\nSQB = (LPR, XHH)\nNLH = (QLR, LXH)\nRCR = (DNQ, CDL)\nCGM = (TJB, GCM)\nDGS = (GHG, HXG)\nTMB = (GGQ, MSB)\nVJV = (PSR, BPR)\nNNN = (LQF, QXR)\nFNK = (PSG, HTG)\nNCJ = (KJK, FSJ)\nGRC = (SQP, NRR)\nHQD = (LHN, PVJ)\nNBL = (PNT, RSP)\nJLF = (BHP, BHP)\nHTG = (CLT, RMP)\nQQN = (RHQ, NFF)\nNRV = (LKV, FLQ)\nRBV = (CMQ, GBG)\nZZZ = (SCX, JCJ)\nNGF = (QFD, HVX)\nXPH = (CXH, TKV)\nCBR = (HTD, THC)\nBCL = (NQH, BCJ)\nSSS = (GMD, HBV)\nGHL = (JTB, MHT)\nQSH = (RRS, HGX)\nCVS = (JKP, PKN)\nQNK = (CVT, DKH)\nJBX = (LSF, HNG)\nHFQ = (DDT, QNK)\nVQP = (BLP, PPF)\nRGD = " <> ...,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 8342788.397222222,
+          ips: 119.86400138507116,
+          std_dev: 75142.79175151965,
+          std_dev_ratio: 0.009006915694582264,
+          std_dev_ips: 1.0796049552906277,
+          median: 8321172.0,
+          percentiles: %{50 => 8321172.0, 99 => 8556536.79},
+          mode: [8305577, 8307437],
+          minimum: 8221996,
+          maximum: 8846984,
+          relative_more: 4.232955279840111,
+          relative_less: 0.2362415697521313,
+          absolute_difference: 6371874.970152576,
+          sample_size: 360
+        },
+        samples: [8419008, 8293736, 8342757, 8304116, 8290707, 8319317, 8310066, 8321187, 8493190,
+         8369567, 8311867, 8262986, 8447539, 8299246, 8293347, 8267016, 8415228, 8270306, 8309937,
+         8268636, 8385368, 8280786, 8292377, 8264165, 8385118, 8259526, 8237426, 8260576, 8463779,
+         8287436, 8282836, 8310867, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 9856568.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 9856568.0,
+          percentiles: %{50 => 9856568.0, 99 => 9856568.0},
+          mode: 9856568,
+          minimum: 9856568,
+          maximum: 9856568,
+          relative_more: 5.508604462964371,
+          relative_less: 0.1815341810658639,
+          absolute_difference: 8067264.0,
+          sample_size: 307
+        },
+        samples: [9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568,
+         9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568,
+         9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568, 9856568,
+         9856568, 9856568, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 724997.4011299436,
+          ips: nil,
+          std_dev: 12.422797232140796,
+          std_dev_ratio: 1.7134954156772516e-5,
+          std_dev_ips: nil,
+          median: 724995.0,
+          percentiles: %{50 => 724995.0, 99 => 725045.8},
+          mode: 724985,
+          minimum: 724974,
+          maximum: 725053,
+          relative_more: 5.400512922925296,
+          relative_less: 0.18516759690639345,
+          absolute_difference: 590751.3745993313,
+          sample_size: 354
+        },
+        samples: [724997, 725016, 724986, 724978, 724997, 725006, 724994, 725006, 724990, 725012,
+         724992, 724990, 725011, 724991, 724987, 724986, 725023, 724984, 724992, 724988, 725006,
+         725006, 724994, 725006, 725013, 724992, 725009, 724985, 724999, 724995, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartOne",
+      job_name: "PartOne",
+      function: &PartOne.solve/1,
+      input_name: "test_input",
+      input: "RL\n\nAAA = (BBB, CCC)\nBBB = (DDD, EEE)\nCCC = (ZZZ, GGG)\nDDD = (DDD, DDD)\nEEE = (EEE, EEE)\nGGG = (GGG, GGG)\nZZZ = (ZZZ, ZZZ)\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 6984.271190211346,
+          ips: 143178.86186915656,
+          std_dev: 2241.4614622293743,
+          std_dev_ratio: 0.3209299010855773,
+          std_dev_ips: 45950.377977213946,
+          median: 6880.0,
+          percentiles: %{50 => 6880.0, 99 => 10010.0},
+          mode: 6880,
+          minimum: 6680,
+          maximum: 1189548,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 413540
+        },
+        samples: [17360, 9260, 7200, 8340, 12451, 7000, 8890, 6960, 6960, 6830, 6900, 10080, 8021,
+         6960, 11590, 6930, 6780, 8080, 6860, 6810, 6791, 6840, 6770, 11060, 9520, 7920, 6920, 7930,
+         6891, 7550, 7880, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 3320.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 3320.0,
+          percentiles: %{50 => 3320.0, 99 => 3320.0},
+          mode: 3320,
+          minimum: 3320,
+          maximum: 3320,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 135014
+        },
+        samples: [3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320,
+         3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320, 3320,
+         3320, 3320, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 245.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 245.0,
+          percentiles: %{50 => 245.0, 99 => 245.0},
+          mode: 245,
+          minimum: 245,
+          maximum: 245,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 35594
+        },
+        samples: [245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245,
+         245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, ...]
+      }
+    },
+    %Benchee.Scenario{
+      name: "PartTwo",
+      job_name: "PartTwo",
+      function: &PartTwo.solve/1,
+      input_name: "test_input",
+      input: "RL\n\nAAA = (BBB, CCC)\nBBB = (DDD, EEE)\nCCC = (ZZZ, GGG)\nDDD = (DDD, DDD)\nEEE = (EEE, EEE)\nGGG = (GGG, GGG)\nZZZ = (ZZZ, ZZZ)\n",
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 7294.157388052739,
+          ips: 137096.02724475373,
+          std_dev: 1983.5048205600353,
+          std_dev_ratio: 0.27193063091959896,
+          std_dev_ips: 37280.60918523641,
+          median: 7130.0,
+          percentiles: %{50 => 7130.0, 99 => 12501.0},
+          mode: 7120,
+          minimum: 6931,
+          maximum: 813393,
+          relative_more: 1.044369153115891,
+          relative_less: 0.9575158333779632,
+          absolute_difference: 309.88619784139337,
+          sample_size: 396593
+        },
+        samples: [22460, 11641, 9140, 12030, 9120, 8940, 10770, 9011, 9020, 8920, 8900, 12400,
+         20471, 9310, 10170, 8990, 8870, 10260, 8960, 8901, 8830, 8840, 10990, 9940, 8900, 10250,
+         9021, 8940, 10010, 8960, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 3512.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 3512.0,
+          percentiles: %{50 => 3512.0, 99 => 3512.0},
+          mode: 3512,
+          minimum: 3512,
+          maximum: 3512,
+          relative_more: 1.0578313253012048,
+          relative_less: 0.9453302961275627,
+          absolute_difference: 192.0,
+          sample_size: 130826
+        },
+        samples: [3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512,
+         3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512, 3512,
+         3512, ...]
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 291.0,
+          ips: nil,
+          std_dev: 0.0,
+          std_dev_ratio: 0.0,
+          std_dev_ips: nil,
+          median: 291.0,
+          percentiles: %{50 => 291.0, 99 => 291.0},
+          mode: 291,
+          minimum: 291,
+          maximum: 291,
+          relative_more: 1.1877551020408164,
+          relative_less: 0.8419243986254296,
+          absolute_difference: 46.0,
+          sample_size: 34928
+        },
+        samples: [291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291,
+         291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, 291, ...]
+      }
+    }
+  ]
+}
+```
+
+<!-- livebook:{"offset":36577,"stamp":{"token":"XCP.sCs4YvlsMPlXbVBtq54lyt8R8Y6j1c3fmJucx-YSG12YJyJlIhh-NCZtqYjCcngBS8tX8b25fGFf0Dr8zUa9IW6wt8Nzf6Zap7G9mMn03CWQ8kcxkfE","version":2}} -->
