@@ -1,0 +1,229 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# 2023-08
+
+```elixir
+Mix.install([
+  {:benchee, "~> 1.2"},
+  {:kino, "~> 0.11.0"},
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"8","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "8", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "LRRRLRLLLLLLLRLRLRRLRRRLRRLRRRLRRLRRRLLRRRLRRLRLRRRLRRLRRRLLRLLRRRLRRRLRLLRLRLRRRLRRLRRLRRLRLRRRLRRLRRRLLRLLRLLRRLRLLRLRRLRLRLRRLRRRLLLRRLRRRLLRRLRLRLRRRLRLRRRLLRLLLRRRLLLRRLLRLLRRLLRLRRRLRLRRLRRLLRRLRLLRLRRRLRRRLRLRRRLRLRLRRLRLRRRLRRRLRRRLRRLRRLRRRLLRLRLLRLLRRRR\n\nHVX = (SCS, XQN)\nDMK = (JKL, JKL)\nFDF = (XHL, RMM)\nJTK = (SVN, DVP)\nQCF = (FCH, FCH)\nTCG = (VMS, SDL)\nJJP = (FQJ, RLT)\nDRP = (RMJ, RMJ)\nVKF = (XQB, VBX)\nHRS = (BXK, DPM)\nFHH = (FBF, TNX)\nHDJ = (MBH, QRM)\nTMG = (LJJ, JVM)\nKJK = (GXP, FHS)\nLKV = (VCV, JDP)\nCVT = (MBM, BSQ)\nRSD = (BFH, BPP)\nKJG = (TMB, DMC)\nDRH = (BFS, NCJ)\nGRF = (MJL, TXX)\nJVA = (XKG, RCL)\nGFK = (NJF, NPR)\nCQJ = (GVM, KKF)\nTJC = (FNR, TFH)\nBJP = (NMJ, JMX)\nDRX = (MRR, QDL)\nQFV = (TLM, XQM)\nXQF = (NGF, NDC)\nGDF = (TCV, PTP)\nRHQ = (RGT, PXT)\nNBR = (RRV, NCG)\nPVF = (QPL, KRG)\nCSQ = (TSC, GRF)\nVMJ = (VTK, HRS)\nBKH = (RPF, JGX)\nGMM = (SRN, MSQ)\nNLK = (BHP, TVR)\nJDS = (LBV, TBN)\nFQJ = (FMG, NRV)\nJNG = (LTX, KHH)\nDNM = (QPL, KRG)\nBCJ = (LXV, BKQ)\nLHD = (SGJ, JBX)\nNMJ = (GPT, BCL)\nDNJ = (DFT, BXT)\nRDX = (QCX, VBF)\nVMS = (HGR, MLS)\nCSR = (PMC, BPT)\nLFT = (FXN, SRJ)\nJRK = (GDC, KVK)\nBMB = (LJJ, JVM)\nJMD = (JXX, JDS)\nGPS = (LQF, QXR)\nGQF = (VFK, GDR)\nGGB = (MBP, RMV)\nNRR = (CDX, MDJ)\nVDM = (QRJ, LDJ)\nFHM = (GFK, DSM)\nXQM = (QSH, SXJ)\nPSG = (RMP, CLT)\nSPH = (VQQ, QTG)\nXDB = (NSX, HDJ)\nGDC = (SBL, XCL)\nQBH = (HGS, KMR)\nJDK = (PXR, LFT)\nVBX = (DPL, VNL)\nGXQ = (LFP, BXD)\nRTT = (DHV, GDM)\nRRV = (KRF, PLS)\nXLA = (XMF, TRG)\nLTP = (FNR, TFH)\nSRP = (SNR, DLD)\nJVV = (BCN, QXH)\nJKM = (VCS, SQB)\nDXX = (SDN, VXM)\nXCV = (JBX, SGJ)\nVXL = (XJM, HKT)\nDGB = (RDQ, HGM)\nSLT = (GDL, NQV)\nXHH = (PQN, DNP)\nFBK = (GMM, RHM)\nPCG = (TCV, PTP)\nGPT = (BCJ, NQH)\nRLK = (TMG, BMB)\nDSJ = (JKP, PKN)\nXXJ = (VHX, RNJ)\nLPS = (FBQ, NFG)\nTMS = (KTV, VLT)\nFXN = (CLC, HJJ)\nGSV = (XSM, PPQ)\nPQN = (XXJ, FJP)\nHKX = (JSQ, RFS)\nTRS = (BRL, FLC)\nCPK = (QVN, PRR)\nVFK = (KRH, LFV)\nXVJ = (MQK, LRG)\nBXT = (DMQ, JMD)\nCDH = (VQJ, CLR)\nFLP = (VPN, VBT)\nKDF = (LPD, KMS)\nHXH = (DNQ, CDL)\nLLH = (SJD, JXB)\nPKN = (KBD, RXT)\nMJT = (FCH, CGS)\nHMN = (PNK, QRK)\nTXR = (QFV, DJM)\nKNF = (HST, SLT)\nXHL = (RXM, HXF)\nVCM = (QBH, QHS)\nNXD = (CXH, TKV)\nBPP = (LBD, TBR)\nTKX = (LPQ, JNG)\nSVM = (LHN, PVJ)\nBGH = (KNS, VBG)\nHHX = (QJP, QMC)\nCCN = (GSV, PHX)\nTNH = (TRP, JXT)\nLJM = (PMV, BGR)\nTJX = (XNM, GBF)\nLCD = (XQF, KRP)\nPTP = (CSR, SDG)\nRCL = (BMJ, RMH)\nDVQ = (JCJ, SCX)\nDJM = (XQM, TLM)\nTVR = (VLX, XQZ)\nKXH = (DHV, GDM)\nHFB = (NQB, LKZ)\nLBV = (MDV, LKP)\nXMF = (DXS, JRM)\nDSG = (XFF, HMN)\nVNL = (FQD, RRC)\nDPB = (TRP, JXT)\nHHR = (DVT, DTJ)\nCLR = (NXD, XPH)\nQSF = (FTV, LLH)\nJRM = (LPS, VGL)\nQHK = (DRP, DRP)\nGKJ = (QQN, JGC)\nBKQ = (FBK, RJX)\nVBG = (GCV, DHH)\nJGC = (NFF, RHQ)\nKBD = (TFJ, XBN)\nQHG = (JMQ, XGL)\nDFJ = (MMB, DRX)\nHLJ = (GHG, HXG)\nKKF = (TKX, XTM)\nLXP = (GBF, XNM)\nKKG = (TJX, LXP)\nBGR = (PFQ, FSG)\nBTS = (BCN, QXH)\nBXK = (VKL, FSX)\nJBS = (PXR, LFT)\nKHF = (GBD, FCP)\nCLK = (FHM, GVG)\nNPR = (JTM, VDR)\nXGL = (DMK, JHG)\nSFV = (KXH, RTT)\nDSM = (NJF, NPR)\nDKH = (BSQ, MBM)\nFTX = (LXP, TJX)\nPLF = (DDS, LXJ)\nJTB = (HLJ, DGS)\nTJB = (QHG, LDQ)\nRFC = (NPF, BXL)\nMBH = (KFQ, DMT)\nLCM = (DGV, HKX)\nDLM = (GQD, KGH)\nGSM = (QDQ, RHN)\nPKV = (DTJ, DVT)\nHNC = (PHX, GSV)\nJBT = (DSR, DSL)\nRMV = (XMT, GND)\nQRK = (DFH, FFT)\nQDQ = (RJC, FTF)\nMFX = (DPB, TNH)\nLGS = (JVF, JRK)\nJFR = (QLV, JQN)\nBXL = (LQH, JFR)\nGDM = (DTB, GXR)\nPTG = (XVJ, MNT)\nHGS = (CGM, LSS)\nLDQ = (JMQ, XGL)\nLPR = (PQN, DNP)\nTRG = (JRM, DXS)\nVHX = (JTQ, BKP)\nQPP = (LFP, BXD)\nNNC = (RFQ, RDT)\nPJL = (NGD, SXQ)\nJQN = (PJL, CTJ)\nJGH = (LRQ, JNN)\nTRP = (PJR, SSS)\nFTD = (HHR, PKV)\nGXR = (VDL, VCM)\nTXT = (HNC, CCN)\nSQB = (LPR, XHH)\nNLH = (QLR, LXH)\nRCR = (DNQ, CDL)\nCGM = (TJB, GCM)\nDGS = (GHG, HXG)\nTMB = (GGQ, MSB)\nVJV = (PSR, BPR)\nNNN = (LQF, QXR)\nFNK = (PSG, HTG)\nNCJ = (KJK, FSJ)\nGRC = (SQP, NRR)\nHQD = (LHN, PVJ)\nNBL = (PNT, RSP)\nJLF = (BHP, BHP)\nHTG = (CLT, RMP)\nQQN = (RHQ, NFF)\nNRV = (LKV, FLQ)\nRBV = (CMQ, GBG)\nZZZ = (SCX, JCJ)\nNGF = (QFD, HVX)\nXPH = (CXH, TKV)\nCBR = (HTD, THC)\nBCL = (NQH, BCJ)\nSSS = (GMD, HBV)\nGHL = (JTB, MHT)\nQSH = (RRS, HGX)\nCVS = (JKP, PKN)\nQNK = (CVT, DKH)\nJBX = (LSF, HNG)\nHFQ = (DDT, QNK)\nVQP = (BLP, PPF)\nRGD = " <> ...}
+```
+
+## Solvers
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> {dirs, conns} = PartOne.parse("RL\n\nAAA = (BBB, CCC)\nBBB = (DDD, EEE)\nCCC = (ZZZ, GGG)")
+      ...> Enum.take(dirs, 2)
+      [:right, :left]
+      ...> Map.keys(conns)
+      ~w(AAA BBB CCC)
+  """
+  def parse(input) do
+    [dirs | conns] = String.split(input, "\n", trim: true)
+
+    dirs = direction_template(dirs)
+
+    conns = connection_graph(conns)
+
+    {dirs, conns}
+  end
+
+  def process({dirs, conns}) do
+    Enum.reduce_while(dirs, {0, "AAA"}, fn
+      _dir, {steps, "ZZZ"} ->
+        {:halt, steps}
+
+      dir, {steps, node} ->
+        {left, right} = Map.fetch!(conns, node)
+        next = if dir == :left, do: left, else: right
+        {:cont, {steps + 1, next}}
+    end)
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+
+  def connection_graph(conns) do
+    Map.new(conns, fn line ->
+      [node, left, right] =
+        Regex.run(~r/([A-Z]+) = \(([A-Z]+), ([A-Z]+)\)/, line, capture: :all_but_first)
+
+      {node, {left, right}}
+    end)
+  end
+
+  def direction_template(s) do
+    s
+    |> String.to_charlist()
+    |> Enum.map(fn
+      ?R -> :right
+      ?L -> :left
+    end)
+    |> Stream.cycle()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 17, ...>>, {:direction_template, 1}}
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+15517
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    RL
+
+    AAA = (BBB, CCC)
+    BBB = (DDD, EEE)
+    CCC = (ZZZ, GGG)
+    DDD = (DDD, DDD)
+    EEE = (EEE, EEE)
+    GGG = (GGG, GGG)
+    ZZZ = (ZZZ, ZZZ)
+    """
+    test "counts steps" do
+      assert PartOne.solve(@test_input) == 2
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+**..
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+2 doctests, 2 tests, 0 failures, 2 skipped
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 4, skipped: 2, failures: 0, excluded: 0}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+Benchee.run(
+  %{
+    "PartOne" => &PartOne.solve/1,
+    "PartTwo" => &PartTwo.solve/1
+  },
+  inputs: %{
+    input: input,
+    test_input: """
+    """
+  },
+  warmup: 2,
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
+)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":8093,"stamp":{"token":"XCP.hDeTqN3h3IDayAg-XeTqBWtAdHhgiWYmNG_IICaVPZmUKHdO7oHzd-hGPBitynFM0in1sQdYCiFv_GsO3TzDV5F9f0cv0upMOtq3gCGCMcDtZ3QLVAE","version":2}} -->
