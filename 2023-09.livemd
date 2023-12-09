@@ -1,0 +1,332 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# 2023-09
+
+```elixir
+Mix.install(
+  [
+    {:benchee, "~> 1.2"},
+    {:exla, "~> 0.6.0"},
+    {:kino, "~> 0.11.0"},
+    {:kino_aoc, "~> 0.1.5"},
+    {:nimble_parsec, "~> 1.4"},
+    {:nx, "~> 0.6.0"}
+  ],
+  config: [
+    nx: [
+      default_backend: EXLA.Backend,
+      default_defn_options: [compiler: EXLA]
+    ],
+    exla: [
+      default_client: :host,
+      clients: [
+        host: [platform: :host],
+        cuda: [platform: :cuda]
+      ]
+    ]
+  ],
+  system_env: [
+    XLA_TARGET: "cuda120"
+  ]
+)
+
+Nx.global_default_backend(EXLA.Backend)
+```
+
+## Problem
+
+<!-- livebook:{"attrs":{"assign_to":"input","day":"9","session_secret":"AOC_SESSION","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, input} = KinoAOC.download_puzzle("2023", "9", System.fetch_env!("LB_AOC_SESSION"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "0 14 45 109 238 493 989 1942 3763 7260 14077 27610 54805 109473 218063 429227 829002 1564034 2875989 5151147 8990168\n15 18 30 59 111 187 296 499 999 2292 5394 12159 25703 50949 95308 169511 288607 473142 750534 1156659 1737663\n5 11 15 33 90 214 428 752 1253 2229 4693 11450 29258 72870 172222 384737 815757 1651623 3212059 6031479 10982866\n11 16 23 24 13 -7 -3 134 674 2194 5828 13721 29926 62289 126510 254929 515555 1053450 2181099 4575420 9702689\n16 31 60 112 215 439 934 1988 4110 8143 15412 27912 48541 81383 132046 208060 319340 478719 702556 1011424 1430883\n12 7 12 54 178 448 938 1712 2791 4113 5527 6958 9104 15500 37718 107235 300798 792410 1957506 4580209 10266638\n17 21 30 48 77 119 191 374 932 2554 6791 16781 38378 81826 164146 312433 568291 993667 1678380 2749678 4384195\n24 37 63 112 194 319 497 738 1052 1449 1939 2532 3238 4067 5029 6134 7392 8813 10407 12184 14154\n11 8 18 52 130 304 693 1530 3221 6416 12092 21648 37012 60760 96247 147750 220623 321464 458294 640748 880278\n22 33 42 54 85 172 386 856 1822 3745 7512 14784 28545 53920 99340 178142 310702 527209 871198 1403970 2210037\n18 20 24 34 54 88 140 214 314 444 608 810 1054 1344 1684 2078 2530 3044 3624 4274 4998\n-8 -10 1 46 151 357 744 1469 2818 5272 9587 16888 28777 47455 75858 117807 178172 263050 379957 538034 748267\n1 6 26 72 171 381 806 1611 3037 5416 9186 14906 23271 35127 51486 73541 102681 140506 188842 249756 325571\n5 20 41 68 101 140 185 236 293 356 425 500 581 668 761 860 965 1076 1193 1316 1445\n20 38 72 140 277 545 1041 1903 3314 5504 8750 13374 19739 28243 39311 53385 70912 92330 118052 148448 183825\n4 7 21 74 220 564 1301 2769 5512 10346 18439 31487 52233 85884 143500 249291 455277 869701 1711690 3417800 6854447\n0 1 9 36 101 231 473 938 1906 4032 8710 18677 38984 78578 153085 290356 542855 1017057 1944000 3845866 7918498\n12 15 30 67 130 208 262 208 -104 -915 -2586 -5631 -10754 -18890 -31250 -49370 -75164 -110981 -159666 -224625 -309894\n2 18 45 83 132 192 263 345 438 542 657 783 920 1068 1227 1397 1578 1770 1973 2187 2412\n10 11 20 47 100 195 375 731 1422 2715 5135 9968 20651 46080 107649 252985 580950 1284615 2721626 5524697 10768850\n-4 -4 9 49 141 337 751 1623 3426 7039 14036 27210 51589 96428 178991 331412 612714 1129686 2074056 3792092 6922209\n5 12 40 97 192 356 683 1398 2974 6351 13364 27575 55854 111344 219060 426682 825747 1593398 3073408 5928841 11418708\n18 36 65 116 222 456 965 2037 4241 8715 17723 35658 70733 137675 261817 485069 874340 1533078 2616693 4352728 7066744\n3 14 33 56 81 125 268 732 2005 5030 11514 24508 49620 97614 189795 368602 717489 1397080 2710069 5218030 9953981\n26 50 97 182 323 552 935 1601 2780 4850 8393 14260 23645 38168 59967 91799 137150 200354 286721 402674 555895\n14 29 73 160 309 548 930 1575 2752 5015 9407 17746 33007 59814 105056 178641 294402 471169 734021 1115732 1658425\n2 2 6 31 105 278 643 1364 2702 5023 8781 14539 23309 38000 67770 138871 318530 762996 1807680 4127011 9005033\n19 20 30 70 181 451 1057 2322 4787 9298 17108 29994 50389 81529 127615 193990 287331 415856 589546 820382 1122597\n17 32 74 157 295 502 792 1179 1677 2300 3062 3977 5059 6322 7780 9447 11337 13464 15842 18485 21407\n3 4 4 4 17 74 232 595 1362 2914 5950 11697 22294 41677 77846 148591 295156 612955 1317215 2877781 6287522\n19 37 64 98 137 179 222 264 303 337 364 382 389 383 362 324 267 189 88 -38 -191\n7 7 26 85 209 438 867 1734 3593 7652 16437 35081 73762 152177 307542 608680 1180815 2249821 4223028 7840205 14459843\n-5 -12 -20 -22 7 125 448 1196 2772 5887 11745 22303 40622 71326 121187 199855 320753 502158 768490 1151832 1693705\n5 0 -5 -10 -15 -20 -25 -30 -35 -40 -45 -50 -55 -60 -65 -70 -75 -80 -85 -90 -95\n-1 6 15 19 10 -3 49 371 1430 4169 10381 23363 49033 97772 187349 347401 626073 1099576 1885595 3161675 5189932\n13 26 42 57 64 60 53 70 173 497 1331 3267 7438 15847 31746 59946 106813 179516 283824 419381 570900\n18 44 94 176 298 479 782 1395 2798 6078 13503 29553 62744 128783 255871 493340 925282 1691416 3018156 5263702 8981990\n13 21 39 94 224 472 881 1507 2474 4102 7152 13269 25811 51524 104128 212091 435133 898089 1858087 3834270 7853652\n1" <> ...}
+```
+
+```elixir
+test_input = """
+0 3 6 9 12 15
+1 3 6 10 15 21
+10 13 16 21 30 45
+"""
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"0 3 6 9 12 15\n1 3 6 10 15 21\n10 13 16 21 30 45\n"
+```
+
+## Parser
+
+```elixir
+defmodule ParseDay9 do
+  import NimbleParsec
+
+  ws = ignore(ascii_char([?\s]))
+  newline = ignore(ascii_char([?\n]))
+
+  value =
+    concat(
+      optional(ws),
+      ascii_string([?-, ?0..?9], min: 1) |> map({String, :to_integer, []})
+    )
+
+  series = times(value, min: 1) |> concat(optional(newline)) |> tag(:series)
+  input = times(series, min: 1)
+
+  defparsec(:input, input)
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, ParseDay9, <<70, 79, 82, 49, 0, 0, 39, ...>>,
+ [input__0: 6, input__1: 6, input__1: 6, input__2: 6, input__3: 6, input__4: 6, ...]}
+```
+
+```elixir
+ParseDay9.input("-1 0 1")
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok, [series: [-1, 0, 1]], "", %{}, {1, 0}, 6}
+```
+
+## Solvers
+
+```elixir
+defmodule Extrapolate do
+  import Nx.Defn
+
+  defn not_all_zeros(t) do
+    t |> Nx.not_equal(0) |> Nx.any()
+  end
+
+  def extrapolate(t) do
+    width = Nx.axis_size(t, 0)
+
+    Enum.reduce_while(1..(width - 1), [t], fn depth, batch ->
+      diff = Nx.diff(t, order: depth)
+
+      if not_all_zeros(diff) do
+        new = Nx.pad(diff, 0, [{depth, 0, 0}])
+        {:cont, [new | batch]}
+      else
+        {:halt, batch}
+      end
+    end)
+    |> Nx.stack(name: :depth)
+    |> Nx.sum(axes: [:depth])
+    |> Access.get(-1)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Extrapolate, <<70, 79, 82, 49, 0, 0, 13, ...>>, {:extrapolate, 1}}
+```
+
+```elixir
+t = Nx.tensor([-3, -6, -9])
+Extrapolate.extrapolate(t)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64
+  EXLA.Backend<host:0, 0.2940547522.3407216699.12204>
+  -12
+>
+```
+
+```elixir
+defmodule PartOne do
+  @doc ~S"""
+      iex> parsed = PartOne.parse("0 3 6 9 12 15\n1 3 6 10 15 21")
+      ...> Keyword.get_values(parsed, :series)
+      [[0,3,6,9,12,15],[1,3,6,10,15,21]]
+  """
+  def parse(input) do
+    {:ok, parsed, "", _context, _line, _col} = ParseDay9.input(input)
+    parsed
+  end
+
+  def process(input) do
+    input
+    |> Keyword.get_values(:series)
+    |> Stream.map(&Nx.tensor/1)
+    |> Enum.map(&Extrapolate.extrapolate/1)
+    |> Nx.stack()
+    |> Nx.sum()
+    |> Nx.to_number()
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartOne, <<70, 79, 82, 49, 0, 0, 9, ...>>, {:solve, 1}}
+```
+
+```elixir
+defmodule PartTwo do
+  import PartOne, only: [parse: 1]
+
+  def process(_input) do
+    ""
+  end
+
+  def solve(input) do
+    input
+    |> parse()
+    |> process()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, PartTwo, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:solve, 1}}
+```
+
+## Solutions
+
+```elixir
+PartOne.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+1939607039
+```
+
+```elixir
+PartTwo.solve(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+""
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Tests
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+ExUnit.start(auto_run: false, seed: 12345, timeout: 5000)
+
+defmodule PartOneTest do
+  use ExUnit.Case, async: true
+
+  doctest PartOne
+
+  describe "Part One" do
+    @test_input """
+    0 3 6 9 12 15
+    1 3 6 10 15 21
+    10 13 16 21 30 45
+    """
+    test "extrapolates and sums next values" do
+      assert PartOne.solve(@test_input) == 114
+    end
+  end
+end
+
+defmodule PartTwoTest do
+  use ExUnit.Case, async: true
+
+  @moduletag :skip
+
+  doctest PartOne
+
+  describe "Part Two" do
+    @test_input """
+    """
+    test "TODO" do
+      assert PartTwo.solve(@test_input) == false
+    end
+  end
+end
+
+ExUnit.run()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+**..
+Finished in 0.01 seconds (0.01s async, 0.00s sync)
+2 doctests, 2 tests, 0 failures, 2 skipped
+
+Randomized with seed 12345
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{total: 4, skipped: 2, failures: 0, excluded: 0}
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Golfing
+
+## Benchmarks
+
+```elixir
+# Benchee.run(
+#   %{
+#     "PartOne" => &PartOne.solve/1,
+#     "PartTwo" => &PartTwo.solve/1
+#   },
+#   inputs: %{
+#     input: input,
+#     test_input: """
+#     """
+#   },
+#   warmup: 2,
+#   time: 3,
+#   memory_time: 3,
+#   reduction_time: 3
+# )
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+nil
+```
+
+<!-- livebook:{"branch_parent_index":2} -->
+
+## Failures
+
+Sometimes my ideas don't work out.
+
+<!-- livebook:{"offset":9539,"stamp":{"token":"XCP.yJY5WhWHoET55Joywt9idqHPVB8EKSX8I-kEaZHthEMVhment8Ds_MK8Ivm_XB8qbhsbJdrpZmklCWE6o2qnIp4YO9-A6gVmUNj4A0u8SKT-07GGbWA","version":2}} -->
